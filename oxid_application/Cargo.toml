@@ -1,0 +1,9 @@
+[package]
+name = "oxid_application"
+edition = "2024"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+
+[dependencies]
+lettre = { version = "0.11" }

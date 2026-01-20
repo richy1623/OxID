@@ -1,0 +1,8 @@
+[workspace]
+resolver = "3"
+members = ["oxid_application", "oxid_service_interface"]
+
+[workspace.package]
+version = "0.0.1"
+authors = ["Richard Paterson"]
+description = "A Rust based Authentication Mangement System"
