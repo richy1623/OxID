@@ -1,0 +1,202 @@
+openapi: 3.1.1
+info:
+  title: OxID - OpenAPI 3.1
+  description: |-
+    This is a Authentication Management System Server based on the OpenAPI 3.1 specification.
+  contact:
+    email: richy1623@gmail.com
+  version: 1.0.0
+tags:
+  - name: User
+    description: Everything related to user operations
+  - name: Management
+    description: Everything related to management operations
+paths:
+  /user:
+    post:
+      tags:
+        - User
+      summary: Create a new user.
+      description: Create a new user with the given details.
+      operationId: userCreate
+      requestBody:
+        description: User creation request.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /user/{userId}:
+    get:
+      tags:
+        - User
+      summary: Fetch user details.
+      description: Fetch a users details for a given user ID.
+      operationId: userFetch
+      security:
+        - JwtAuth: []
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: User ID of the user to get
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+  /user/login:
+    post:
+      tags:
+        - User
+      summary: User login.
+      description: Login a user with the given credentials.
+      operationId: userLogin
+      requestBody:
+        description: User credentials.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "403":
+          description: Incorrect password
+        "404":
+          description: User not found
+  /user/login/refresh:
+    post:
+      tags:
+        - User
+      summary: Refresh a user login.
+      description: Refresh a users login token with a refresh token.
+      operationId: userRefreshLogin
+      requestBody:
+        description: Refresh Token.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRefreshLoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "401":
+          description: Invalid token
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - emailAddress
+        - firstName
+        - surname
+        - password
+      properties:
+        emailAddress:
+          type: string
+          format: email
+        firstName:
+          type: string
+        surname:
+          type: string
+        contactNumber:
+          type: string
+        address:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+    User:
+      type: object
+      required:
+        - emailAddress
+        - firstName
+        - surname
+      properties:
+        emailAddress:
+          type: string
+          format: email
+        firstName:
+          type: string
+        surname:
+          type: string
+        contactNumber:
+          type: string
+        address:
+          type: string
+    UserLoginRequest:
+      type: object
+      required:
+        - emailAddress
+        - password
+      properties:
+        emailAddress:
+          type: string
+          format: email
+        password:
+          type: string
+    UserRefreshLoginRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    LoginToken:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+    ErrorDetail:
+      type: object
+      required:
+        - error
+        - errorDescription
+      properties:
+        error:
+          type: string
+        errorDescription:
+          type: string
+  securitySchemes:
+    JwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token. Permissions are encoded as claims inside the token.
