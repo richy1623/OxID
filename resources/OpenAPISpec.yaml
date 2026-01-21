@@ -7,7 +7,7 @@ info:
     using JWT-based authentication.
   contact:
     email: richy1623@gmail.com
-  version: 1.0.0
+  version: 0.0.1
 
 tags:
   - name: User
