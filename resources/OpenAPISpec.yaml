@@ -159,6 +159,7 @@ components:
           example: "123 Main Road, Cape Town"
         password:
           type: string
+          format: password
           description: |
             User password.
             Must be at least 8 characters long.
@@ -210,6 +211,7 @@ components:
           example: user@example.com
         password:
           type: string
+          format: password
           description: User password
           example: "StrongPassword123"
 
@@ -221,6 +223,7 @@ components:
       properties:
         refreshToken:
           type: string
+          format: password
           description: Opaque refresh token issued during login
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 
@@ -233,10 +236,12 @@ components:
       properties:
         accessToken:
           type: string
+          format: password
           description: Short-lived JWT used for authenticated requests
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
         refreshToken:
           type: string
+          format: password
           description: Long-lived token used to refresh authentication
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 
