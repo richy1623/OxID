@@ -11,3 +11,5 @@ diesel = { version = "2.3.6", features = ["postgres"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
 openssl-sys = { version = "0.9.111", features = ["vendored"] }
 dotenvy = "0.15"
+serde = "1.0.228"
+uuid = "1.20.0"

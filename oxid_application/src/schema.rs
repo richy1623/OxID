@@ -18,7 +18,7 @@ diesel::table! {
 diesel::table! {
     users (id) {
         id -> Uuid,
-        email -> Text,
+        email_address -> Text,
         first_name -> Text,
         surname -> Text,
         identification -> Nullable<Text>,
@@ -31,8 +31,4 @@ diesel::table! {
 diesel::joinable!(authentication_tokens -> users (user_id));
 diesel::joinable!(user_permissions -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    authentication_tokens,
-    user_permissions,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(authentication_tokens, user_permissions, users,);
