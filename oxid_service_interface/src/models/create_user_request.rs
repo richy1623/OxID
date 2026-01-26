@@ -29,6 +29,9 @@ pub struct CreateUserRequest {
     /// Optional residential address
     #[serde(rename = "address", skip_serializing_if = "Option::is_none")]
     pub address: Option<String>,
+    /// Optional identification number (e.g. passport number)
+    #[serde(rename = "identification", skip_serializing_if = "Option::is_none")]
+    pub identification: Option<String>,
     /// User password. Must be at least 8 characters long. 
     #[serde(rename = "password")]
     pub password: String,
@@ -43,6 +46,7 @@ impl CreateUserRequest {
             surname,
             contact_number: None,
             address: None,
+            identification: None,
             password,
         }
     }

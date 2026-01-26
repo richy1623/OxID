@@ -157,6 +157,10 @@ components:
           type: string
           description: Optional residential address
           example: "123 Main Road, Cape Town"
+        identification:
+          type: string
+          description: Optional identification number (e.g. passport number)
+          example: "439405987"
         password:
           type: string
           description: |
@@ -195,6 +199,10 @@ components:
           type: string
           description: User's address
           example: "123 Main Road, Cape Town"
+        identification:
+          type: string
+          description: Optional identification number (e.g. passport number)
+          example: "439405987"
 
     UserLoginRequest:
       type: object
