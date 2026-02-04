@@ -13,11 +13,17 @@ openapi-generator-cli generate -i resources\OpenAPISpec.yaml -g rust -o oxid_ser
 
 ## How to run tests with coverage
 
+This repo uses `tarpaulin` to generate code coverage reports for Rust code. The `.tarpaulin.toml` file contains the configuration.
+
 ### Local
 
 ```shell
-cargo tarpaulin --no-fail-fast --target-dir "target/tarpaulin" --exclude-files "target/*" --skip-clean --out html
+cargo tarpaulin
 ```
+
+### CI
+
+To run the tests with coverage include `[ci]` in the commit message to trigger a GitHub Action to run the tests + coverage
 
 ## Certificate Management
 
