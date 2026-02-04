@@ -1,0 +1,272 @@
+openapi: 3.1.1
+info:
+  title: OxID - OpenAPI 3.1
+  description: |
+    OxID is an authentication and identity management service.
+    It provides user registration, login, token refresh, and secured user lookup
+    using JWT-based authentication.
+  contact:
+    email: richy1623@gmail.com
+  version: 0.0.1
+
+tags:
+  - name: User
+    description: Operations related to user authentication and identity management
+  - name: Management
+    description: Administrative and management-level operations
+
+paths:
+  /user:
+    post:
+      tags: [User]
+      summary: Create a new user
+      description: |
+        Registers a new user account with the system.
+      operationId: userCreate
+      requestBody:
+        description: User registration payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+
+  /user/{userId}:
+    get:
+      tags: [User]
+      summary: Fetch user details
+      description: |
+        Retrieves user profile information for the specified user ID.
+        Requires a valid JWT access token.
+      operationId: userFetch
+      security:
+        - JwtAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+
+  /auth/login:
+    post:
+      tags: [User]
+      summary: User login
+      description: |
+        Authenticates a user using email and password.
+        Returns a short-lived access token and a long-lived refresh token.
+      operationId: userLogin
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "403":
+          description: Incorrect password
+        "404":
+          description: User not found
+
+  /auth/login/refresh:
+    post:
+      tags: [User]
+      summary: Refresh login tokens
+      description: |
+        Issues a new access token and refresh token
+        using a valid refresh token.
+      operationId: userRefreshLogin
+      requestBody:
+        description: Refresh token payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRefreshLoginRequest"
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "401":
+          description: Invalid or expired refresh token
+
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      description: Payload used to create a new user account
+      required:
+        - emailAddress
+        - firstName
+        - surname
+        - password
+      properties:
+        emailAddress:
+          type: string
+          format: email
+          description: User's email address (must be unique)
+          example: user@example.com
+        firstName:
+          type: string
+          description: User's given name(s)
+          example: John
+        surname:
+          type: string
+          description: User's family name
+          example: Doe
+        contactNumber:
+          type: string
+          description: Optional contact phone number
+          example: "+27821234567"
+        address:
+          type: string
+          description: Optional residential address
+          example: "123 Main Road, Cape Town"
+        password:
+          type: string
+          format: password
+          description: |
+            User password.
+            Must be at least 8 characters long.
+          minLength: 8
+          writeOnly: true
+          example: "StrongPassword123"
+
+    User:
+      type: object
+      description: Public user profile information
+      required:
+        - emailAddress
+        - firstName
+        - surname
+      properties:
+        emailAddress:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        firstName:
+          type: string
+          description: User's given name
+          example: John
+        surname:
+          type: string
+          description: User's family name
+          example: Doe
+        contactNumber:
+          type: string
+          description: User's contact phone number
+          example: "+27821234567"
+        address:
+          type: string
+          description: User's address
+          example: "123 Main Road, Cape Town"
+
+    UserLoginRequest:
+      type: object
+      description: Login credentials for a user
+      required:
+        - emailAddress
+        - password
+      properties:
+        emailAddress:
+          type: string
+          format: email
+          description: Registered email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: User password
+          example: "StrongPassword123"
+
+    UserRefreshLoginRequest:
+      type: object
+      description: Payload used to refresh authentication tokens
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          format: password
+          description: Opaque refresh token issued during login
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
+
+    LoginToken:
+      type: object
+      description: JWT access and refresh token pair
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          format: password
+          description: Short-lived JWT used for authenticated requests
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
+        refreshToken:
+          type: string
+          format: password
+          description: Long-lived token used to refresh authentication
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
+
+    ErrorDetail:
+      type: object
+      description: Standard error response
+      required:
+        - error
+        - errorDescription
+      properties:
+        error:
+          type: string
+          description: Short error identifier
+          example: "INVALID_REQUEST"
+        errorDescription:
+          type: string
+          description: Human-readable error explanation
+          example: "Email address is already registered"
+
+  securitySchemes:
+    JwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer authentication.
+        The access token must be provided in the `Authorization` header
+        using the `Bearer <token>` format.
