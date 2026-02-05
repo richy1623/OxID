@@ -71,11 +71,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: cobertura.xml
+          path: coverage/cobertura.xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: cobertura.xml
+          files: coverage/cobertura.xml
           fail_ci_if_error: true
