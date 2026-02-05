@@ -1,5 +1,8 @@
 # OxID
+
 A Rust based Authentication Mangement System
+
+[![codecov](https://codecov.io/gh/richy1623/OxID/graph/badge.svg?token=7J9YMIGJM2)](https://codecov.io/gh/richy1623/OxID)
 
 ## Code Generation
 
