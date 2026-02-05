@@ -12,7 +12,20 @@ jobs:
     name: Run Standard Tests
     if: ${{ contains(github.event.head_commit.message, '[ci]') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: username
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: db
+          POSTGRES_INITDB_ARGS: "-c max_connections=500"
+        ports:
+          - 5430:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 1s --health-timeout 1s --health-retries 20
 
     steps:
       - uses: actions/checkout@v5
