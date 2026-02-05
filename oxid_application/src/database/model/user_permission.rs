@@ -22,8 +22,8 @@ impl UserPermissions {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// let permissions = UserRepository::get_permissions(&mut conn, &user_id)?;
+    /// ```ignore
+    /// let permissions = UserPermissions::get_permissions(&mut connection, &user_id)?;
     /// println!("User permissions: {:?}", permissions.permissions);
     /// ```
     pub fn get_permissions(
@@ -50,9 +50,9 @@ impl UserPermissions {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// let count = UserRepository::add_permission(
-    ///     &mut conn,
+    /// ```ignore
+    /// let count = UserPermissions::add_permission(
+    ///     &mut connection,
     ///     &user_id,
     ///     &vec!["READ".into(), "WRITE".into()],
     /// )?;
@@ -89,8 +89,8 @@ impl UserPermissions {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// let removed = UserRepository::remove_all_permissions(&mut conn, &user_id)?;
+    /// ```ignore
+    /// let removed = UserPermissions::remove_all_permissions(&mut connection, &user_id)?;
     /// println!("Permissions removed: {}", removed);
     /// ```
     pub fn remove_all_permissions(
@@ -113,9 +113,9 @@ impl UserPermissions {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// let removed = UserRepository::remove_permissions(
-    ///     &mut conn,
+    /// ```ignore
+    /// let removed = UserPermissions::remove_permissions(
+    ///     &mut connection,
     ///     &user_id,
     ///     &vec!["READ".into()],
     /// )?;
@@ -147,9 +147,9 @@ impl UserPermissions {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// UserRepository::set_permissions(
-    ///     &mut conn,
+    /// ```ignore
+    /// UserPermissions::set_permissions(
+    ///     &mut connection,
     ///     &user_id,
     ///     &vec!["READ".into(), "WRITE".into()],
     /// )?;

@@ -1,0 +1,7 @@
+[run]
+no-fail-fast = true
+skip-clean = true
+out = ["Xml", "Html"]
+exclude-files = ["target/*", "oxid_service_interface/**"]
+target-dir = "target/tarpaulin"
+output-dir = "coverage"
