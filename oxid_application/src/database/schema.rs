@@ -1,9 +1,10 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    authentication_tokens (user_id, token) {
+    authentication_tokens (user_id, token_id) {
         user_id -> Uuid,
-        token -> Text,
+        token_id -> Uuid,
+        token_hash -> Text,
         expiry_time -> Timestamp,
     }
 }

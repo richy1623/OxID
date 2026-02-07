@@ -1,7 +1,19 @@
+pub mod authentication_token;
 pub mod user;
 pub mod user_permission;
 
 use thiserror::Error;
+
+// #[derive(Error, Debug)]
+// pub enum DataAccessErrorNew {
+//     #[error("An error occurred while accessing the database")]
+//     InternalDatabaseError(#[from] diesel::result::Error),
+//     #[error("An error occurred while performing a crypto operation")]
+//     CrytpoError,
+//     DataItemNotFound,
+//     DuplicateEntry,
+
+// }
 
 #[derive(Error, Debug)]
 pub enum DataAccessError {

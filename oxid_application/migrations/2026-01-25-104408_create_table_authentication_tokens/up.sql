@@ -1,9 +1,9 @@
 -- Your SQL goes here
 CREATE TABLE authentication_tokens (
+    token_id UUID PRIMARY KEY  NOT NULL DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users(id),
-    token TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
     expiry_time TIMESTAMP NOT NULL,
-    PRIMARY KEY (user_id, token)
 );
 
 CREATE INDEX authentication_tokens_index_user_id ON authentication_tokens USING HASH (user_id);

@@ -1,14 +1,12 @@
-use argon2::{PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{PasswordHash, PasswordVerifier};
 use diesel::{
     ExpressionMethods, Insertable, PgConnection, QueryDsl, Queryable, RunQueryDsl, Selectable,
     SelectableHelper,
 };
-use password_hash::SaltString;
-use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    crypto::ARGON2,
+    crypto::{ARGON2, hash_string},
     database::{model::DataAccessError, schema::users},
 };
 
@@ -54,7 +52,7 @@ impl User {
                 users::surname.eq(surname),
                 users::contact_number.eq(contact_number),
                 users::address.eq(address),
-                users::password_hash.eq(User::hash_password(&password)?),
+                users::password_hash.eq(hash_string(&password)?),
                 users::identification.eq(identification),
             ))
             .returning(User::as_returning())
@@ -98,13 +96,6 @@ impl User {
             &PasswordHash::new(&user.password_hash)?,
         )?;
         Ok(user)
-    }
-
-    pub fn hash_password(password: &str) -> Result<String, password_hash::Error> {
-        let salt = SaltString::generate(&mut OsRng);
-
-        let hashed = ARGON2.hash_password(password.as_bytes(), &salt)?;
-        Ok(hashed.serialize().to_string())
     }
 }
 
