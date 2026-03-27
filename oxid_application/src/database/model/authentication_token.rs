@@ -116,8 +116,117 @@ impl AuthenticationToken {
 
 #[cfg(test)]
 mod tests {
+    use std::thread;
+
+    use diesel::r2d2::{ConnectionManager, Pool};
+    use rstest::{fixture, rstest};
+
     use super::*;
 
-    #[test]
-    fn test_name() {}
+    #[fixture]
+    #[once]
+    pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
+        crate::tests::get_test_db_connection_pool("test_authentication_token")
+    }
+
+    #[rstest]
+    fn test_create_authentication_token(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        assert_eq!(authentication_token.user_id, user.id);
+        assert!(
+            authentication_token
+                .expiry_time
+                .ge(&Utc::now().naive_local())
+        );
+        assert!(
+            authentication_token
+                .expiry_time
+                .le(&(Utc::now() + Duration::from_secs(5)).naive_local())
+        );
+
+        AuthenticationToken::validate_authentication_token(
+            &mut connection,
+            authentication_token.token_id,
+            authentication_token.user_id,
+            authentication_token.token.as_str(),
+        )
+        .unwrap();
+    }
+
+    #[rstest]
+    fn test_validate_invalid_token(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token.token_id,
+                authentication_token.user_id,
+                "invalid_token",
+            )
+            .is_err()
+        );
+    }
+
+    #[rstest]
+    fn test_validate_no_such_token(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                uuid::Uuid::now_v7(),
+                user.id,
+                "no_such_token",
+            )
+            .is_err()
+        );
+    }
+    
+    #[rstest]
+    fn test_validate_expired_token(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::ZERO,
+        )
+        .unwrap();
+
+        thread::sleep(Duration::from_millis(5));
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token.token_id,
+                authentication_token.user_id,
+                authentication_token.token.as_str(),
+            )
+            .is_err()
+        );
+    }
 }

@@ -58,7 +58,7 @@ sudo certbot certonly --standalone --key-type ecdsa --elliptic-curve secp256r1 -
 
 ## Diesel
 
-Diesel is the ORM used to interact with the SQLite DB
+Diesel is the ORM used to interact DB
 
 ### Get Started
 
