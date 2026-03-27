@@ -15,7 +15,7 @@ use thiserror::Error;
 
 // }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum DataAccessError {
     #[error("An error occurred while accessing the database")]
     DatabaseError(#[from] diesel::result::Error),

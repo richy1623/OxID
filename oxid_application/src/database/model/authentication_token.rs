@@ -203,7 +203,7 @@ mod tests {
             .is_err()
         );
     }
-    
+
     #[rstest]
     fn test_validate_expired_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
@@ -228,5 +228,137 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[rstest]
+    fn test_delete_token(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        AuthenticationToken::delete_token(&mut connection, authentication_token.token_id).unwrap();
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token.token_id,
+                authentication_token.user_id,
+                authentication_token.token.as_str(),
+            )
+            .is_err()
+        );
+    }
+
+    #[rstest]
+    fn test_delete_expired_tokens(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token_1 = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        let authentication_token_2 = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::ZERO,
+        )
+        .unwrap();
+
+        let authentication_token_3 = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user.id,
+            Duration::ZERO,
+        )
+        .unwrap();
+
+        thread::sleep(Duration::from_millis(5));
+
+        AuthenticationToken::delete_expired_tokens(&mut connection).unwrap();
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token_1.token_id,
+                authentication_token_1.user_id,
+                authentication_token_1.token.as_str(),
+            )
+            .is_ok()
+        );
+        assert!(matches!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token_2.token_id,
+                authentication_token_2.user_id,
+                authentication_token_2.token.as_str(),
+            )
+            .unwrap_err(),
+            DataAccessError::DatabaseError(_)
+        ));
+        assert!(matches!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token_3.token_id,
+                authentication_token_3.user_id,
+                authentication_token_3.token.as_str(),
+            )
+            .unwrap_err(),
+            DataAccessError::DatabaseError(_)
+        ));
+    }
+
+    #[rstest]
+    fn test_delete_user_tokens(pool: &Pool<ConnectionManager<PgConnection>>) {
+        let mut connection = pool.clone().get().unwrap();
+
+        let user_1 = crate::database::model::tests::create_test_user(&mut connection);
+        let user_2 = crate::database::model::tests::create_test_user(&mut connection);
+
+        let authentication_token_1 = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user_1.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        let authentication_token_2 = AuthenticationToken::create_authentication_token(
+            &mut connection,
+            user_2.id,
+            Duration::from_secs(5),
+        )
+        .unwrap();
+
+        AuthenticationToken::delete_user_tokens(&mut connection, user_2.id).unwrap();
+
+        assert!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token_1.token_id,
+                authentication_token_1.user_id,
+                authentication_token_1.token.as_str(),
+            )
+            .is_ok()
+        );
+        assert!(matches!(
+            AuthenticationToken::validate_authentication_token(
+                &mut connection,
+                authentication_token_2.token_id,
+                authentication_token_2.user_id,
+                authentication_token_2.token.as_str(),
+            )
+            .unwrap_err(),
+            DataAccessError::DatabaseError(_)
+        ));
     }
 }
