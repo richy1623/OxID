@@ -3,7 +3,6 @@ use std::time::Duration;
 use argon2::{PasswordHash, PasswordVerifier};
 use chrono::Utc;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
-use rand_core::{OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -34,7 +33,7 @@ impl AuthenticationToken {
         token_life: Duration,
     ) -> Result<AuthenticationToken, DataAccessError> {
         let mut key_bytes = [0u8; 64];
-        OsRng.fill_bytes(&mut key_bytes);
+        getrandom::fill(&mut key_bytes)?;
         let key_hex_string = hex::encode(&key_bytes);
         diesel::insert_into(authentication_tokens::table)
             .values((
@@ -55,6 +54,7 @@ impl AuthenticationToken {
                 expiry_time,
                 token: key_hex_string,
             })
+        // TODO update API to include token_id
     }
 
     pub fn validate_authentication_token(
@@ -112,4 +112,12 @@ impl AuthenticationToken {
             .execute(connection)
             .map_err(DataAccessError::from)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name() {}
 }

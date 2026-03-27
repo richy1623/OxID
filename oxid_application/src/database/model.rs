@@ -23,8 +23,20 @@ pub enum DataAccessError {
     CrytpoError,
 }
 
-impl From<password_hash::errors::Error> for DataAccessError {
-    fn from(_value: password_hash::errors::Error) -> Self {
+impl From<password_hash::Error> for DataAccessError {
+    fn from(_value: password_hash::Error) -> Self {
+        DataAccessError::CrytpoError
+    }
+}
+
+impl From<password_hash::phc::Error> for DataAccessError {
+    fn from(_value: password_hash::phc::Error) -> Self {
+        DataAccessError::CrytpoError
+    }
+}
+
+impl From<getrandom::Error> for DataAccessError {
+    fn from(_value: getrandom::Error) -> Self {
         DataAccessError::CrytpoError
     }
 }
