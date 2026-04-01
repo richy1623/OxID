@@ -12,7 +12,20 @@ jobs:
     name: Run Standard Tests
     if: ${{ contains(github.event.head_commit.message, '[ci]') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:18.3-alpine
+        env:
+          POSTGRES_USER: username
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: db
+          POSTGRES_INITDB_ARGS: "-c max_connections=500"
+        ports:
+          - 5430:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 1s --health-timeout 1s --health-retries 20
 
     steps:
       - uses: actions/checkout@v5
@@ -30,43 +43,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Run tests
-        run: cargo test --verbose
-
-      - uses: actions/cache/save@v4
-        id: cache-test-save
-        if: (success() || failure()) && steps.cache-test-restore.outputs.cache-hit != 'true'
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-  coverage:
-    name: Run Coverage Tests
-    runs-on: ubuntu-latest
-    needs: test
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/cache/restore@v4
-        id: cache-coverage-restore
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-coverage-
-
       - name: Install Tarpaulin
         run: |
           if ! cargo tarpaulin --version &> /dev/null; then
@@ -77,13 +53,11 @@ jobs:
           fi
 
       - name: Run tests with coverage
-        run:
-          cargo tarpaulin --no-fail-fast --target-dir "target/tarpaulin" --exclude-files "target/*" --skip-clean --out
-          xml
+        run: cargo tarpaulin
 
       - uses: actions/cache/save@v4
-        id: cache-coverage-save
-        if: (success() || failure()) && steps.cache-coverage-restore.outputs.cache-hit != 'true'
+        id: cache-test-save
+        if: success() || (failure() && steps.cache-test-restore.outputs.cache-hit != 'true')
         with:
           path: |
             ~/.cargo/bin/
@@ -91,17 +65,17 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: cobertura.xml
+          path: coverage/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: cobertura.xml
+          files: coverage/cobertura.xml
           fail_ci_if_error: true

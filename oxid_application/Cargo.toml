@@ -7,3 +7,27 @@ description.workspace = true
 
 [dependencies]
 lettre = { version = "0.11" }
+diesel = { version = "2.3.7", features = [
+    "postgres",
+    "uuid",
+    "r2d2",
+    "chrono",
+] }
+diesel_migrations = "2.3.1"
+pq-sys = { version = "0.7.5", features = ["bundled"] }
+openssl-sys = { version = "0.9.112", features = ["vendored"] }
+dotenvy = "0.15"
+serde = "1.0.228"
+uuid = { version = "1.23.0", features = ["serde", "v7"] }
+# TODO Update when v6 of password hash comes out
+argon2 = { version = "0.6.0-rc.8" }
+rand_core = { version = "0.10.0" }
+password-hash = { version = "0.6.0", features = ["rand_core"] }
+thiserror = "2.0.18"
+chrono = { version = "0.4.44", features = ["serde"] }
+hex = "0.4.3"
+getrandom = "0.4.2"
+derive-debug = "0.1.2"
+
+[dev-dependencies]
+rstest = "0.26.1"

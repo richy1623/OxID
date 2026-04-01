@@ -29,6 +29,9 @@ pub struct User {
     /// User's address
     #[serde(rename = "address", skip_serializing_if = "Option::is_none")]
     pub address: Option<String>,
+    /// Optional identification number (e.g. passport number)
+    #[serde(rename = "identification", skip_serializing_if = "Option::is_none")]
+    pub identification: Option<String>,
 }
 
 impl User {
@@ -40,6 +43,7 @@ impl User {
             surname,
             contact_number: None,
             address: None,
+            identification: None,
         }
     }
 }

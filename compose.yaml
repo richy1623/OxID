@@ -1,0 +1,17 @@
+services:
+  postgres-db:
+    image: docker.io/library/postgres:18.3-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    command: ["postgres", "-c", "max_connections=500"]
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U username -d db'"]
+      interval: 1s
+      timeout: 2s
+      retries: 15
+    ports:
+      - 5430:5432
