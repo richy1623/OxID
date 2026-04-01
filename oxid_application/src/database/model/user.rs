@@ -1,18 +1,15 @@
-use argon2::{PasswordHash, PasswordVerifier};
-use diesel::{
-    ExpressionMethods, Insertable, PgConnection, QueryDsl, Queryable, RunQueryDsl, Selectable,
-    SelectableHelper,
-};
-use serde::{Deserialize, Serialize};
-
 use crate::{
     crypto::{ARGON2, hash_string},
     database::{model::DataAccessError, schema::users},
 };
+use argon2::{PasswordHash, PasswordVerifier};
+use derive_debug::Dbg;
+use diesel::{
+    ExpressionMethods, Insertable, PgConnection, QueryDsl, Queryable, RunQueryDsl, Selectable,
+    SelectableHelper,
+};
 
-#[derive(
-    Queryable, Selectable, Insertable, Debug, PartialEq, Eq, Clone, Serialize, Deserialize,
-)]
+#[derive(Queryable, Selectable, Insertable, Dbg, PartialEq, Eq, Clone)]
 #[diesel(table_name = crate::database::schema::users)]
 /// User : Public user profile information
 pub struct User {
@@ -31,6 +28,7 @@ pub struct User {
     /// Optional identification number (e.g. passport number)
     pub identification: Option<String>,
     /// The ARGON2 hash of the users password
+    #[dbg(placeholder = "****")]
     pub password_hash: String,
 }
 

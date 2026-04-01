@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use argon2::{PasswordHash, PasswordVerifier};
 use chrono::Utc;
+use derive_debug::Dbg;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
-use serde::{Deserialize, Serialize};
 
 use crate::{
     crypto::{ARGON2, hash_string},
@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Dbg, PartialEq, Eq, Clone)]
 /// AuthenticationToken : A token used to provide access to a users account
 pub struct AuthenticationToken {
     /// User's id
@@ -21,6 +21,7 @@ pub struct AuthenticationToken {
     /// The id of the token
     pub token_id: uuid::Uuid,
     /// The secret token
+    #[dbg(placeholder = "****")]
     pub token: String,
     /// User's given name
     pub expiry_time: chrono::NaiveDateTime,
