@@ -15,6 +15,7 @@ pub async fn get_connection_pool(database_url: &str) -> Pool<AsyncPgConnection> 
     let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
 
     let database_connection_pool = Pool::builder(manager)
+        .max_size(20)
         .build()
         .expect("Could not build connection pool");
 
@@ -68,7 +69,7 @@ pub mod tests {
 
         std::thread::spawn(move || {
             let rt = tokio::runtime::Builder::new_multi_thread()
-                .worker_threads(2)
+                .worker_threads(3)
                 .enable_all()
                 .build()
                 .expect("Failed to create Tokio runtime");
