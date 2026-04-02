@@ -1,6 +1,6 @@
 use crate::{
     crypto::{ARGON2, hash_string},
-    database::{model::DataAccessError, schema::users},
+    database::{DataAccessError, schema::users},
 };
 use argon2::{PasswordHash, PasswordVerifier};
 use derive_debug::Dbg;

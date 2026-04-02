@@ -43,6 +43,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+        "409":
+          description: Email address already taken
 
   /user/{userId}:
     get:
@@ -175,10 +177,16 @@ components:
       type: object
       description: Public user profile information
       required:
+        - userId
         - emailAddress
         - firstName
         - surname
       properties:
+        userId:
+          type: string
+          format: uuid
+          description: Unique identifier of the user
+          example: "550e8400-e29b-41d4-a716-446655440000"
         emailAddress:
           type: string
           format: email
@@ -264,7 +272,7 @@ components:
           type: string
           description: Short error identifier
           example: "INVALID_REQUEST"
-        errorDescription:
+        message:
           type: string
           description: Human-readable error explanation
           example: "Email address is already registered"

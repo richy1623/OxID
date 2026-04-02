@@ -8,7 +8,7 @@ use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use crate::{
     crypto::{ARGON2, hash_string},
     database::{
-        model::DataAccessError,
+        DataAccessError,
         schema::authentication_tokens::{self},
     },
 };
@@ -134,7 +134,7 @@ mod tests {
     fn test_create_authentication_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token = AuthenticationToken::create_authentication_token(
             &mut connection,
@@ -168,7 +168,7 @@ mod tests {
     fn test_validate_invalid_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token = AuthenticationToken::create_authentication_token(
             &mut connection,
@@ -192,7 +192,7 @@ mod tests {
     fn test_validate_no_such_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         assert!(
             AuthenticationToken::validate_authentication_token(
@@ -209,7 +209,7 @@ mod tests {
     fn test_validate_expired_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token = AuthenticationToken::create_authentication_token(
             &mut connection,
@@ -235,7 +235,7 @@ mod tests {
     fn test_delete_token(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token = AuthenticationToken::create_authentication_token(
             &mut connection,
@@ -261,7 +261,7 @@ mod tests {
     fn test_delete_expired_tokens(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token_1 = AuthenticationToken::create_authentication_token(
             &mut connection,
@@ -323,8 +323,8 @@ mod tests {
     fn test_delete_user_tokens(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user_1 = crate::database::model::tests::create_test_user(&mut connection);
-        let user_2 = crate::database::model::tests::create_test_user(&mut connection);
+        let user_1 = crate::database::tests::create_test_user(&mut connection);
+        let user_2 = crate::database::tests::create_test_user(&mut connection);
 
         let authentication_token_1 = AuthenticationToken::create_authentication_token(
             &mut connection,

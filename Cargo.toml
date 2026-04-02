@@ -2,7 +2,16 @@
 resolver = "3"
 members = ["oxid_application", "oxid_service_interface"]
 
+[workspace.dependencies]
+oxid_service_interface = { path = "oxid_service_interface" }
+
 [workspace.package]
 version = "0.0.1"
 authors = ["Richard Paterson"]
 description = "A Rust based Authentication Management System"
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+debug = 0 # This disables debug info for all dependencies

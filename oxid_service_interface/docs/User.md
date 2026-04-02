@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**user_id** | **uuid::Uuid** | Unique identifier of the user | 
 **email_address** | **String** | User's email address | 
 **first_name** | **String** | User's given name | 
 **surname** | **String** | User's family name | 

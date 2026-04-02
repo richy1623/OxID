@@ -20,6 +20,7 @@ use super::{Error, configuration, ContentType};
 #[serde(untagged)]
 pub enum UserCreateError {
     Status400(models::ErrorDetail),
+    Status409(),
     UnknownValue(serde_json::Value),
 }
 
