@@ -1,20 +1,18 @@
 use actix_web::{HttpResponse, Responder, Result, http::StatusCode, post, web};
+use diesel_async::{AsyncPgConnection, pooled_connection::deadpool::Pool};
 use oxid_service_interface::models::{CreateUserRequest, User};
 
-use crate::{
-    api::{DbPool, handler::get_database_connection},
-    database::model::user::User as UserDbModel,
-};
+use crate::{api::handler::get_database_connection, database::model::user::User as UserDbModel};
 
 #[post("/user")]
 pub async fn create_user(
-    connection_pool: web::Data<DbPool>,
+    connection_pool: web::Data<Pool<AsyncPgConnection>>,
     // http_request: HttpRequest,
     request: web::Json<CreateUserRequest>,
 ) -> Result<impl Responder> {
     let create_user_request: CreateUserRequest = request.into_inner();
 
-    let mut connection = get_database_connection(connection_pool)?;
+    let mut connection = get_database_connection(connection_pool).await?;
 
     let user = UserDbModel::create_user(
         &mut connection,
@@ -25,7 +23,8 @@ pub async fn create_user(
         create_user_request.address.as_deref(),
         create_user_request.identification.as_deref(),
         &create_user_request.password,
-    )?;
+    )
+    .await?;
 
     Ok(HttpResponse::Ok()
         .status(StatusCode::CREATED)
@@ -42,14 +41,14 @@ mod tests {
 
     #[fixture]
     #[once]
-    pub fn db_pool() -> DbPool {
+    pub fn db_pool() -> Pool<AsyncPgConnection> {
         crate::database::tests::get_test_db_connection_pool("test_user_handler")
     }
 
     // The TestServer is NOT Sync, so it cannot be #[once].
     // We initialize it for every test, but we pass in the shared pool.
     #[fixture]
-    pub fn server(db_pool: &DbPool) -> TestServer {
+    pub fn server(db_pool: &Pool<AsyncPgConnection>) -> TestServer {
         let pool = db_pool.clone();
         actix_test::start(move || {
             App::new().configure(|c| crate::api::server::configure_app(c, pool.clone()))
@@ -58,8 +57,8 @@ mod tests {
 
     #[rstest]
     #[actix_web::test]
-    async fn test_create_user(server: TestServer, db_pool: &DbPool) {
-        let mut connection = db_pool.get().unwrap();
+    async fn test_create_user(server: TestServer, db_pool: &Pool<AsyncPgConnection>) {
+        let mut connection = db_pool.get().await.unwrap();
 
         let request = server.post("/user");
         let mut response = request
@@ -81,21 +80,24 @@ mod tests {
         assert_eq!(user.identification, Some("439405987".to_string()));
 
         // Validate the DB update
-        let user_in_db = UserDbModel::get_user_by_user_id(&mut connection, &user.user_id).unwrap();
+        let user_in_db = UserDbModel::get_user_by_user_id(&mut connection, &user.user_id)
+            .await
+            .unwrap();
         assert_eq!(User::from(user_in_db), user);
         assert!(
             UserDbModel::validate_login(&mut connection, &user.email_address, "StrongPassword123")
+                .await
                 .is_ok()
         );
     }
 
     #[rstest]
     #[actix_web::test]
-    async fn test_create_user_duplicate(server: TestServer, db_pool: &DbPool) {
-        let mut connection = db_pool.get().unwrap();
+    async fn test_create_user_duplicate(server: TestServer, db_pool: &Pool<AsyncPgConnection>) {
+        let mut connection = db_pool.get().await.unwrap();
 
         // create duplicate user
-        let user = crate::database::model::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection).await;
 
         let request = server.post("/user");
         let response = request

@@ -1,30 +1,32 @@
 pub mod model;
 pub mod schema;
 
-use diesel::prelude::*;
-use diesel::r2d2::ConnectionManager;
-use diesel::r2d2::Pool;
+use diesel_async::AsyncMigrationHarness;
+use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_migrations::EmbeddedMigrations;
 use diesel_migrations::MigrationHarness;
 use thiserror::Error;
 
 pub const MIGRATIONS: EmbeddedMigrations = diesel_migrations::embed_migrations!();
 
-pub fn get_connection_pool(database_url: &str) -> Pool<ConnectionManager<PgConnection>> {
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
+pub async fn get_connection_pool(database_url: &str) -> Pool<AsyncPgConnection> {
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
 
-    let database_connection_pool = Pool::builder()
-        .test_on_check_out(true)
-        .min_idle(Some(1))
-        .build(manager)
+    let database_connection_pool = Pool::builder(manager)
+        .build()
         .expect("Could not build connection pool");
 
-    database_connection_pool
-        .clone()
-        .get()
-        .expect("Failed getting db pool connection")
-        .run_pending_migrations(MIGRATIONS)
-        .expect("Failed running migrations");
+    AsyncMigrationHarness::new(
+        database_connection_pool
+            .clone()
+            .get()
+            .await
+            .expect("Failed getting db pool connection"),
+    )
+    .run_pending_migrations(MIGRATIONS)
+    .expect("Failed running migrations");
 
     database_connection_pool
 }
@@ -57,42 +59,47 @@ impl From<getrandom::Error> for DataAccessError {
 
 #[cfg(test)]
 pub mod tests {
-    use diesel::{
-        Connection, PgConnection, RunQueryDsl,
-        r2d2::{ConnectionManager, Pool},
-    };
-    use diesel_migrations::MigrationHarness;
+    use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
     use crate::database::*;
 
-    pub fn get_test_db_connection_pool(db_name: &str) -> Pool<ConnectionManager<PgConnection>> {
-        let database_url = "postgres://username:password@localhost:5430/postgres";
-        let mut conn =
-            PgConnection::establish(database_url).expect("Error connecting to Postgres server");
+    pub fn get_test_db_connection_pool(db_name: &str) -> Pool<AsyncPgConnection> {
+        let db_name = db_name.to_string();
 
-        // First, drop the database if it exists
-        let drop_db_sql = format!("DROP DATABASE IF EXISTS {}", db_name);
-        diesel::sql_query(drop_db_sql)
-            .execute(&mut conn)
-            .expect("Failed to drop existing database");
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(2)
+                .enable_all()
+                .build()
+                .expect("Failed to create Tokio runtime");
 
-        // Run the SQL to create it
-        let create_db_sql = format!("CREATE DATABASE {}", db_name);
-        diesel::sql_query(create_db_sql)
-            .execute(&mut conn)
-            .expect("Failed to create database");
+            rt.block_on(async move {
+                let database_url = "postgres://username:password@localhost:5430/postgres";
 
-        let pool = get_connection_pool(&format!(
-            "{}{}",
-            "postgres://username:password@localhost:5430/", db_name
-        ));
+                let mut conn = AsyncPgConnection::establish(database_url)
+                    .await
+                    .expect("Error connecting to Postgres server");
 
-        pool.clone()
-            .get()
-            .unwrap()
-            .run_pending_migrations(MIGRATIONS)
-            .unwrap();
+                let drop_db_sql = format!("DROP DATABASE IF EXISTS {}", db_name);
+                diesel::sql_query(drop_db_sql)
+                    .execute(&mut conn)
+                    .await
+                    .expect("Failed to drop existing database");
 
-        pool
+                let create_db_sql = format!("CREATE DATABASE {}", db_name);
+                diesel::sql_query(create_db_sql)
+                    .execute(&mut conn)
+                    .await
+                    .expect("Failed to create database");
+
+                get_connection_pool(&format!(
+                    "postgres://username:password@localhost:5430/{}",
+                    db_name
+                ))
+                .await
+            })
+        })
+        .join()
+        .expect("Thread panicked")
     }
 }

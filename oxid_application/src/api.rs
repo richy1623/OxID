@@ -9,9 +9,7 @@ use actix_web::{
         ErrorUnauthorized,
     },
 };
-use diesel::{PgConnection, r2d2, result::DatabaseErrorKind};
-
-type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
+use diesel::result::DatabaseErrorKind;
 
 impl From<DataAccessError> for ActixError {
     fn from(err: DataAccessError) -> Self {
