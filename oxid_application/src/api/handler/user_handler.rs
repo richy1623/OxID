@@ -33,6 +33,7 @@ pub async fn create_user(
 
 #[cfg(test)]
 mod tests {
+    use actix_test::TestServer;
     use actix_web::{App, http::StatusCode};
     use rstest::{fixture, rstest};
 
@@ -44,15 +45,18 @@ mod tests {
         crate::database::tests::get_test_db_connection_pool("test_user_handler")
     }
 
-    #[rstest]
-    #[actix_web::test]
-    async fn test_create_user(db_pool: &Pool<AsyncPgConnection>) {
-        let mut connection = db_pool.get().await.unwrap();
+    #[fixture]
+    pub fn server(db_pool: &Pool<AsyncPgConnection>) -> TestServer {
+        let pool = db_pool.clone();
+        actix_test::start(move || {
+            App::new().configure(|c| crate::api::server::configure_app(c, pool.clone()))
+        })
+    }
 
-        let db_pool = db_pool.clone();
-        let server = actix_test::start(move || {
-            App::new().configure(|c| crate::api::server::configure_app(c, db_pool.clone()))
-        });
+    #[rstest]
+    #[actix_web::test(flavor = "multi_thread")]
+    async fn test_create_user(server: TestServer, db_pool: &Pool<AsyncPgConnection>) {
+        let mut connection = db_pool.get().await.unwrap();
 
         let request = server.post("/user");
         let mut response = request
@@ -86,14 +90,9 @@ mod tests {
     }
 
     #[rstest]
-    #[actix_web::test]
-    async fn test_create_user_duplicate(db_pool: &Pool<AsyncPgConnection>) {
+    #[actix_web::test(flavor = "multi_thread")]
+    async fn test_create_user_duplicate(server: TestServer, db_pool: &Pool<AsyncPgConnection>) {
         let mut connection = db_pool.get().await.unwrap();
-
-        let db_pool = db_pool.clone();
-        let server = actix_test::start(move || {
-            App::new().configure(|c| crate::api::server::configure_app(c, db_pool.clone()))
-        });
 
         // create duplicate user
         let user = crate::database::model::tests::create_test_user(&mut connection).await;
