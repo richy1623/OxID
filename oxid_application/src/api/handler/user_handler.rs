@@ -43,7 +43,7 @@ mod tests {
     #[fixture]
     #[once]
     pub fn db_pool() -> DbPool {
-        crate::tests::get_test_db_connection_pool("test_user_handler")
+        crate::database::tests::get_test_db_connection_pool("test_user_handler")
     }
 
     // The TestServer is NOT Sync, so it cannot be #[once].
@@ -95,7 +95,7 @@ mod tests {
         let mut connection = db_pool.get().unwrap();
 
         // create duplicate user
-        let user = crate::database::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection);
 
         let request = server.post("/user");
         let response = request

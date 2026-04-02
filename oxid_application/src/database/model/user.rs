@@ -107,7 +107,7 @@ mod tests {
     #[fixture]
     #[once]
     pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
-        crate::tests::get_test_db_connection_pool("test_user")
+        crate::database::tests::get_test_db_connection_pool("test_user")
     }
 
     #[rstest]

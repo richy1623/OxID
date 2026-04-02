@@ -177,17 +177,17 @@ mod tests {
     #[fixture]
     #[once]
     pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
-        crate::tests::get_test_db_connection_pool("test_user_permissions")
+        crate::database::tests::get_test_db_connection_pool("test_user_permissions")
     }
 
     #[rstest]
     fn test_get_user_permissions(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user_1 = crate::database::tests::create_test_user(&mut connection);
-        let user_2 = crate::database::tests::create_test_user(&mut connection);
+        let user_1 = crate::database::model::tests::create_test_user(&mut connection);
+        let user_2 = crate::database::model::tests::create_test_user(&mut connection);
 
-        crate::database::tests::assign_test_permissions(&mut connection, &user_1);
+        crate::database::model::tests::assign_test_permissions(&mut connection, &user_1);
 
         let user_1_permissions =
             UserPermissions::get_permissions(&mut connection, &user_1.id).unwrap();
@@ -211,7 +211,7 @@ mod tests {
     fn test_add_user_permissions(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection);
 
         UserPermissions::add_permission(&mut connection, &user.id, &vec!["test1", "test2"])
             .unwrap();
@@ -241,9 +241,9 @@ mod tests {
     fn test_remove_user_permissions(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection);
 
-        crate::database::tests::assign_test_permissions(&mut connection, &user);
+        crate::database::model::tests::assign_test_permissions(&mut connection, &user);
 
         // Remove one permission
         let remove_permissions =
@@ -289,9 +289,9 @@ mod tests {
     fn test_remove_all_user_permissions(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection);
 
-        crate::database::tests::assign_test_permissions(&mut connection, &user);
+        crate::database::model::tests::assign_test_permissions(&mut connection, &user);
 
         // Remove all permissions
         let remove_permissions = UserPermissions::remove_all_permissions(&mut connection, &user.id);
@@ -308,9 +308,9 @@ mod tests {
     fn test_set_user_permissions(pool: &Pool<ConnectionManager<PgConnection>>) {
         let mut connection = pool.clone().get().unwrap();
 
-        let user = crate::database::tests::create_test_user(&mut connection);
+        let user = crate::database::model::tests::create_test_user(&mut connection);
 
-        crate::database::tests::assign_test_permissions(&mut connection, &user);
+        crate::database::model::tests::assign_test_permissions(&mut connection, &user);
 
         // Set Permissions
         let remove_permissions =

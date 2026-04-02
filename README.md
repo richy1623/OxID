@@ -11,7 +11,7 @@ A Rust based Authentication Mangement System
 > Note: requires openapi-generator-cli
 
 ```shell
-openapi-generator-cli generate -i resources\OpenAPISpec.yaml -g rust -o oxid_service_interface --additional-properties=packageName=oxid_service_interface
+openapi-generator-cli generate -i resources/OpenAPISpec.yaml -g rust -o oxid_service_interface --additional-properties=packageName=oxid_service_interface
 ```
 
 ## How to run tests with coverage

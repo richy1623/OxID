@@ -6,6 +6,7 @@ use diesel::{
 
 use crate::api::DbPool;
 
+pub mod error_handler;
 pub mod user_handler;
 
 pub fn get_database_connection(

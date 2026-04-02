@@ -30,3 +30,35 @@ impl From<User> for ApiUserModel {
         }
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use diesel::PgConnection;
+    use uuid::Uuid;
+
+    use crate::database::model::{user::User, user_permission::UserPermissions};
+
+    pub fn create_test_user(connection: &mut PgConnection) -> User {
+        User::create_user(
+            connection,
+            &format!("{}@email.com", &Uuid::now_v7().to_string()),
+            "first_name",
+            "surname",
+            Some("0721234197"),
+            Some("address"),
+            Some(&Uuid::now_v7().to_string()),
+            "password",
+        )
+        .unwrap()
+    }
+
+    pub fn assign_test_permissions(connection: &mut PgConnection, user: &User) -> UserPermissions {
+        UserPermissions::set_permissions(
+            connection,
+            &user.id,
+            &vec!["test:read", "test:write", "test2:read"],
+        )
+        .unwrap();
+        UserPermissions::get_permissions(connection, &user.id).unwrap()
+    }
+}
