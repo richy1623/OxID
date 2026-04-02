@@ -34,24 +34,24 @@ pub enum DataAccessError {
     #[error("An error occurred while accessing the database")]
     DatabaseError(#[from] diesel::result::Error),
     #[error("An error occurred while performing a crypto operation")]
-    CrytpoError,
+    CryptoError,
 }
 
 impl From<password_hash::Error> for DataAccessError {
     fn from(_value: password_hash::Error) -> Self {
-        DataAccessError::CrytpoError
+        DataAccessError::CryptoError
     }
 }
 
 impl From<password_hash::phc::Error> for DataAccessError {
     fn from(_value: password_hash::phc::Error) -> Self {
-        DataAccessError::CrytpoError
+        DataAccessError::CryptoError
     }
 }
 
 impl From<getrandom::Error> for DataAccessError {
     fn from(_value: getrandom::Error) -> Self {
-        DataAccessError::CrytpoError
+        DataAccessError::CryptoError
     }
 }
 

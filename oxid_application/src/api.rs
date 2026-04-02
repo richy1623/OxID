@@ -37,7 +37,7 @@ impl From<DataAccessError> for ActixError {
                     ErrorInternalServerError("Database error")
                 }
             },
-            DataAccessError::CrytpoError => {
+            DataAccessError::CryptoError => {
                 ErrorUnauthorized("Incorrect password or invalid token")
             }
         }

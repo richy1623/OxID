@@ -75,11 +75,11 @@ impl AuthenticationToken {
                 .first(connection)?;
         // Verify the user is correct
         if user_id != db_user_id {
-            return Err(DataAccessError::CrytpoError);
+            return Err(DataAccessError::CryptoError);
         }
         // Verify that the token is not expired
         if expiry_time < Utc::now().naive_utc() {
-            return Err(DataAccessError::CrytpoError);
+            return Err(DataAccessError::CryptoError);
         }
         // Verify that the token is correct
         ARGON2.verify_password(token.as_bytes(), &PasswordHash::new(&token_hash)?)?;
