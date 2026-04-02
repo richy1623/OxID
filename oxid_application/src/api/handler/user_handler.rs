@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[rstest]
-    #[actix_web::test(flavor = "multi_thread")]
+    #[actix_web::test(flavor = "multi_thread", worker_threads = 3)]
     async fn test_create_user_duplicate(server: TestServer, db_pool: &Pool<AsyncPgConnection>) {
         let mut connection = db_pool.get().await.unwrap();
 
