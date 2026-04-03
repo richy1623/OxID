@@ -11,7 +11,7 @@ A Rust based Authentication Mangement System
 > Note: requires openapi-generator-cli
 
 ```shell
-openapi-generator-cli generate -i resources\OpenAPISpec.yaml -g rust -o oxid_service_interface
+openapi-generator-cli generate -i resources/OpenAPISpec.yaml -g rust -o oxid_service_interface --additional-properties=packageName=oxid_service_interface
 ```
 
 ## How to run tests with coverage
@@ -77,3 +77,11 @@ Diesel is the ORM used to interact DB
   ```bash
   diesel migration generate <migration_name>
   ```
+
+## Troubleshooting
+
+### Windows Build Issues
+
+If you encounter linker errors (such as LNK1318) or CMake generator mismatches while building OxID on Windows, try force the Ninja Generator.
+Rust's build scripts for C-libraries (like aws-lc-sys or openssl-sys) often struggle to find the correct Visual Studio instance. Using Ninja provides a more reliable and faster build experience.
+Setting an environment variable `CMAKE_GENERATOR=Ninja` to use Ninja.

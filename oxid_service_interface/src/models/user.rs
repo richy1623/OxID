@@ -14,6 +14,9 @@ use serde::{Deserialize, Serialize};
 /// User : Public user profile information
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct User {
+    /// Unique identifier of the user
+    #[serde(rename = "userId")]
+    pub user_id: uuid::Uuid,
     /// User's email address
     #[serde(rename = "emailAddress")]
     pub email_address: String,
@@ -36,8 +39,9 @@ pub struct User {
 
 impl User {
     /// Public user profile information
-    pub fn new(email_address: String, first_name: String, surname: String) -> User {
+    pub fn new(user_id: uuid::Uuid, email_address: String, first_name: String, surname: String) -> User {
         User {
+            user_id,
             email_address,
             first_name,
             surname,

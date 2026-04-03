@@ -1,0 +1,9 @@
+{
+  "emailAddress": "user@example.com",
+  "firstName": "John",
+  "surname": "Doe",
+  "contactNumber": "+27821234567",
+  "address": "123 Main Road, Cape Town",
+  "identification": "439405987",
+  "password": "StrongPassword123"
+}

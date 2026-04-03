@@ -1,13 +1,11 @@
 use crate::{
     crypto::{ARGON2, hash_string},
-    database::{model::DataAccessError, schema::users},
+    database::{DataAccessError, schema::users},
 };
 use argon2::{PasswordHash, PasswordVerifier};
 use derive_debug::Dbg;
-use diesel::{
-    ExpressionMethods, Insertable, PgConnection, QueryDsl, Queryable, RunQueryDsl, Selectable,
-    SelectableHelper,
-};
+use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, Selectable, SelectableHelper};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[derive(Queryable, Selectable, Insertable, Dbg, PartialEq, Eq, Clone)]
 #[diesel(table_name = crate::database::schema::users)]
@@ -33,8 +31,8 @@ pub struct User {
 }
 
 impl User {
-    pub fn create_user(
-        connection: &mut PgConnection,
+    pub async fn create_user(
+        connection: &mut AsyncPgConnection,
         email_address: &str,
         first_name: &str,
         surname: &str,
@@ -55,40 +53,44 @@ impl User {
             ))
             .returning(User::as_returning())
             .get_result(connection)
+            .await
             .map_err(DataAccessError::from)
     }
 
-    pub fn get_user_by_email_address(
-        connection: &mut PgConnection,
+    pub async fn get_user_by_email_address(
+        connection: &mut AsyncPgConnection,
         email_address: &str,
     ) -> Result<User, DataAccessError> {
         users::table
             .filter(users::email_address.eq(email_address))
             .select(User::as_select())
             .first(connection)
+            .await
             .map_err(DataAccessError::from)
     }
 
-    pub fn get_user_by_user_id(
-        connection: &mut PgConnection,
+    pub async fn get_user_by_user_id(
+        connection: &mut AsyncPgConnection,
         user_id: &uuid::Uuid,
     ) -> Result<User, DataAccessError> {
         users::table
             .find(user_id)
             .select(User::as_select())
             .first(connection)
+            .await
             .map_err(DataAccessError::from)
     }
 
-    pub fn validate_login(
-        connection: &mut PgConnection,
+    pub async fn validate_login(
+        connection: &mut AsyncPgConnection,
         email_address: &str,
         password: &str,
     ) -> Result<User, DataAccessError> {
         let user: User = users::table
             .filter(users::email_address.eq(email_address))
             .select(User::as_select())
-            .first(connection)?;
+            .first(connection)
+            .await?;
         ARGON2.verify_password(
             password.as_bytes(),
             &PasswordHash::new(&user.password_hash)?,
@@ -99,20 +101,21 @@ impl User {
 
 #[cfg(test)]
 mod tests {
-    use diesel::r2d2::{ConnectionManager, Pool};
+    use diesel_async::pooled_connection::deadpool::Pool;
     use rstest::{fixture, rstest};
 
     use super::*;
 
     #[fixture]
     #[once]
-    pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
-        crate::tests::get_test_db_connection_pool("test_user")
+    pub fn pool() -> Pool<AsyncPgConnection> {
+        crate::database::tests::get_test_db_connection_pool("test_user")
     }
 
     #[rstest]
-    fn test_create_user(pool: &Pool<ConnectionManager<PgConnection>>) {
-        let mut connection = pool.clone().get().unwrap();
+    #[tokio::test]
+    async fn test_create_user(pool: &Pool<AsyncPgConnection>) {
+        let mut connection = pool.clone().get().await.unwrap();
 
         let user = User::create_user(
             &mut connection,
@@ -124,6 +127,7 @@ mod tests {
             Some("id_number"),
             "password",
         )
+        .await
         .unwrap();
 
         assert_eq!(user.email_address, "email@noreply.com");
@@ -132,26 +136,35 @@ mod tests {
         assert_eq!(user.contact_number, Some("0721234567".to_string()));
         assert_eq!(user.address, Some("some address".to_string()));
         assert_eq!(user.identification, Some("id_number".to_string()));
-        User::validate_login(&mut connection, "email@noreply.com", "password").unwrap();
+        User::validate_login(&mut connection, "email@noreply.com", "password")
+            .await
+            .unwrap();
 
         assert!(
-            User::validate_login(&mut connection, "email@noreply.com", "invalid password").is_err()
+            User::validate_login(&mut connection, "email@noreply.com", "invalid password")
+                .await
+                .is_err()
         );
 
         assert_eq!(
-            User::get_user_by_email_address(&mut connection, "email@noreply.com").unwrap(),
+            User::get_user_by_email_address(&mut connection, "email@noreply.com")
+                .await
+                .unwrap(),
             user
         );
 
         assert_eq!(
-            User::get_user_by_user_id(&mut connection, &user.id).unwrap(),
+            User::get_user_by_user_id(&mut connection, &user.id)
+                .await
+                .unwrap(),
             user
         );
     }
 
     #[rstest]
-    fn test_create_duplicate_user(pool: &Pool<ConnectionManager<PgConnection>>) {
-        let mut connection = pool.clone().get().unwrap();
+    #[tokio::test]
+    async fn test_create_duplicate_user(pool: &Pool<AsyncPgConnection>) {
+        let mut connection = pool.clone().get().await.unwrap();
 
         // Initial user
         User::create_user(
@@ -164,6 +177,7 @@ mod tests {
             Some("id_number"),
             "password",
         )
+        .await
         .unwrap();
 
         // Duplicate user fails
@@ -178,6 +192,7 @@ mod tests {
                 Some("id_number"),
                 "password",
             )
+            .await
             .is_err()
         );
     }

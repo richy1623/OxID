@@ -18,16 +18,16 @@ pub struct ErrorDetail {
     #[serde(rename = "error")]
     pub error: String,
     /// Human-readable error explanation
-    #[serde(rename = "errorDescription")]
-    pub error_description: String,
+    #[serde(rename = "message", skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
 }
 
 impl ErrorDetail {
     /// Standard error response
-    pub fn new(error: String, error_description: String) -> ErrorDetail {
+    pub fn new(error: String) -> ErrorDetail {
         ErrorDetail {
             error,
-            error_description,
+            message: None,
         }
     }
 }

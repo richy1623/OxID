@@ -1,5 +1,5 @@
 [package]
-name = "openapi"
+name = "oxid_service_interface"
 version = "0.0.1"
 authors = ["richy1623@gmail.com"]
 description = "OxID is an authentication and identity management service. It provides user registration, login, token refresh, and secured user lookup using JWT-based authentication. "
@@ -13,9 +13,9 @@ serde_json = "^1.0"
 serde_repr = "^0.1"
 url = "^2.5"
 uuid = { version = "^1.8", features = ["serde", "v4"] }
-reqwest = { version = "^0.12", default-features = false, features = ["json", "multipart"] }
+reqwest = { version = "^0.13", default-features = false, features = ["json", "multipart", "query", "form"] }
 
 [features]
 default = ["native-tls"]
 native-tls = ["reqwest/native-tls"]
-rustls-tls = ["reqwest/rustls-tls"]
+rustls = ["reqwest/rustls"]
