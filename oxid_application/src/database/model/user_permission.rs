@@ -63,11 +63,14 @@ impl UserPermissions {
     ///
     /// println!("Permissions added: {}", count);
     /// ```
-    pub async fn add_permission(
+    pub async fn add_permissions(
         connection: &mut AsyncPgConnection,
         user_id: &uuid::Uuid,
         permissions: &Vec<&str>,
     ) -> Result<usize, DataAccessError> {
+        if permissions.is_empty() {
+            return Ok(0);
+        }
         diesel::insert_into(user_permissions::table)
             .values(
                 permissions
@@ -170,7 +173,7 @@ impl UserPermissions {
             .transaction(|connection| {
                 async move {
                     UserPermissions::remove_all_permissions(connection, user_id).await?;
-                    UserPermissions::add_permission(connection, user_id, permissions).await?;
+                    UserPermissions::add_permissions(connection, user_id, permissions).await?;
                     Ok(())
                 }
                 .scope_boxed()
@@ -229,7 +232,7 @@ mod tests {
 
         let user = crate::database::model::tests::create_test_user(&mut connection).await;
 
-        UserPermissions::add_permission(&mut connection, &user.id, &vec!["test1", "test2"])
+        UserPermissions::add_permissions(&mut connection, &user.id, &vec!["test1", "test2"])
             .await
             .unwrap();
         assert_eq!(
@@ -240,7 +243,7 @@ mod tests {
             vec!["test1".to_string(), "test2".to_string()]
         );
 
-        UserPermissions::add_permission(&mut connection, &user.id, &vec!["test3", "test4"])
+        UserPermissions::add_permissions(&mut connection, &user.id, &vec!["test3", "test4"])
             .await
             .unwrap();
         assert_eq!(
