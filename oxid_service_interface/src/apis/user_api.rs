@@ -167,9 +167,9 @@ pub async fn user_login(configuration: &configuration::Configuration, user_login
 }
 
 /// Issues a new access token and refresh token using a valid refresh token. 
-pub async fn user_refresh_login(configuration: &configuration::Configuration, user_refresh_login_request: models::UserRefreshLoginRequest) -> Result<models::LoginToken, Error<UserRefreshLoginError>> {
+pub async fn user_refresh_login(configuration: &configuration::Configuration, authentication_token: models::AuthenticationToken) -> Result<models::LoginToken, Error<UserRefreshLoginError>> {
     // add a prefix to parameters to efficiently prevent name collisions
-    let p_body_user_refresh_login_request = user_refresh_login_request;
+    let p_body_authentication_token = authentication_token;
 
     let uri_str = format!("{}/auth/login/refresh", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
@@ -177,7 +177,7 @@ pub async fn user_refresh_login(configuration: &configuration::Configuration, us
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
-    req_builder = req_builder.json(&p_body_user_refresh_login_request);
+    req_builder = req_builder.json(&p_body_authentication_token);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;

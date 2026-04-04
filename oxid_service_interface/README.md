@@ -37,12 +37,12 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AuthenticationToken](docs/AuthenticationToken.md)
  - [CreateUserRequest](docs/CreateUserRequest.md)
  - [ErrorDetail](docs/ErrorDetail.md)
  - [LoginToken](docs/LoginToken.md)
  - [User](docs/User.md)
  - [UserLoginRequest](docs/UserLoginRequest.md)
- - [UserRefreshLoginRequest](docs/UserRefreshLoginRequest.md)
 
 
 To get access to the crate's generated documentation, use:
