@@ -116,7 +116,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserRefreshLoginRequest"
+              $ref: "#/components/schemas/AuthenticationToken"
       responses:
         "200":
           description: Tokens refreshed successfully
@@ -231,18 +231,6 @@ components:
           description: User password
           example: "StrongPassword123"
 
-    UserRefreshLoginRequest:
-      type: object
-      description: Payload used to refresh authentication tokens
-      required:
-        - refreshToken
-      properties:
-        refreshToken:
-          type: string
-          format: password
-          description: Opaque refresh token issued during login
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
-
     LoginToken:
       type: object
       description: JWT access and refresh token pair
@@ -256,10 +244,8 @@ components:
           description: Short-lived JWT used for authenticated requests
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
         refreshToken:
-          type: string
-          format: password
+          $ref: "#/components/schemas/AuthenticationToken"
           description: Long-lived token used to refresh authentication
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 
     ErrorDetail:
       type: object
@@ -276,6 +262,28 @@ components:
           type: string
           description: Human-readable error explanation
           example: "Email address is already registered"
+
+    AuthenticationToken:
+      type: object
+      description: A token used to prove identity
+      required:
+        - tokenId
+        - tokenSecret
+        - tokenExpiryTime
+      properties:
+        tokenId:
+          format: uuid
+          description: Identifier for the token
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        tokenSecret:
+          type: string
+          format: password
+          description: The secret key used to validate against (64 Bytes)
+          example: "75c5e6cb67a24ddab6ad2b3d5fe1680bbcfc93c1b1c1d831264f9eea1005a225b2dd0795aa14059c81ef70c47c0f209e1387419699574cf4505424109675a209"
+        tokenExpiryTime:
+          type: string
+          format: date-time
+          description: The time until which the token is valid
 
   securitySchemes:
     JwtAuth:
