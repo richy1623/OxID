@@ -272,6 +272,7 @@ components:
         - tokenExpiryTime
       properties:
         tokenId:
+          type: string
           format: uuid
           description: Identifier for the token
           example: "550e8400-e29b-41d4-a716-446655440000"

@@ -14,8 +14,9 @@ use serde::{Deserialize, Serialize};
 /// AuthenticationToken : A token used to prove identity
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AuthenticationToken {
-    #[serde(rename = "tokenId", deserialize_with = "Option::deserialize")]
-    pub token_id: Option<serde_json::Value>,
+    /// Identifier for the token
+    #[serde(rename = "tokenId")]
+    pub token_id: uuid::Uuid,
     /// The secret key used to validate against (64 Bytes)
     #[serde(rename = "tokenSecret")]
     pub token_secret: String,
@@ -26,7 +27,7 @@ pub struct AuthenticationToken {
 
 impl AuthenticationToken {
     /// A token used to prove identity
-    pub fn new(token_id: Option<serde_json::Value>, token_secret: String, token_expiry_time: String) -> AuthenticationToken {
+    pub fn new(token_id: uuid::Uuid, token_secret: String, token_expiry_time: String) -> AuthenticationToken {
         AuthenticationToken {
             token_id,
             token_secret,
