@@ -1,3 +1,4 @@
+pub mod configuration;
 pub mod handler;
 pub mod server;
 

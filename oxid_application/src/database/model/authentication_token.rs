@@ -36,7 +36,7 @@ impl AuthenticationToken {
     ) -> Result<AuthenticationToken, DataAccessError> {
         let mut key_bytes = [0u8; 64];
         getrandom::fill(&mut key_bytes)?;
-        let key_hex_string = hex::encode(&key_bytes);
+        let key_hex_string: String = hex::encode(&key_bytes);
         diesel::insert_into(authentication_tokens::table)
             .values((
                 authentication_tokens::user_id.eq(user_id),
@@ -57,7 +57,6 @@ impl AuthenticationToken {
                 expiry_time,
                 token: key_hex_string,
             })
-        // TODO update API to include token_id
     }
 
     pub async fn validate_authentication_token(
