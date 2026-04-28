@@ -12,6 +12,11 @@ description = "A Rust based Authentication Management System"
 
 [profile.dev]
 split-debuginfo = "unpacked"
+debug = "line-tables-only"
 
 [profile.dev.package."*"]
-debug = 0 # This disables debug info for all dependencies
+debug = 0
+
+[profile.debugging]
+inherits = "dev"
+debug = true

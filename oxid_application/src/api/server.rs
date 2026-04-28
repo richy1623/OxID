@@ -1,14 +1,14 @@
-use std::{env, io};
+use std::io;
 
 use actix_web::{App, HttpServer, web};
 use diesel_async::{AsyncPgConnection, pooled_connection::deadpool::Pool};
 
-use crate::api::{
-    configuration::AppConfig,
-    handler::{
+use crate::{
+    api::handler::{
         error_handler::{json_error_handler, not_found_handler},
         user_handler::create_user,
     },
+    configuration::AppConfig,
 };
 
 #[actix_web::main]

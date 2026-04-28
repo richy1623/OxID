@@ -5,7 +5,8 @@ use oxid_service_interface::models::{
 };
 
 use crate::{
-    api::{configuration::AppConfig, handler::get_database_connection},
+    api::handler::get_database_connection,
+    configuration::AppConfig,
     database::model::{
         authentication_token::AuthenticationToken as AuthenticationTokenDbModel,
         user::User as UserDbModel,
@@ -93,7 +94,7 @@ mod tests {
     #[fixture]
     pub fn server(db_pool: &Pool<AsyncPgConnection>) -> TestServer {
         let pool = db_pool.clone();
-        let config = crate::api::configuration::tests::get_test_config();
+        let config = crate::configuration::tests::get_test_config();
 
         actix_test::start(move || {
             App::new()
