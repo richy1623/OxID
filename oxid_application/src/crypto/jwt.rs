@@ -1,12 +1,13 @@
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use chrono::Utc;
-use ed25519_dalek::{SigningKey, VerifyingKey, pkcs8};
-use hex::ToHex;
-use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, jwk::JwkSet};
+use jsonwebtoken::{
+    Algorithm, AlgorithmFamily, EncodingKey,
+    jwk::{Jwk, JwkSet, KeyAlgorithm},
+};
 use serde::{Deserialize, Serialize};
 
-use crate::configuration::AppConfig;
+use crate::{configuration::AppConfig, database::DataAccessError};
 
 /// Represents the Registered Claim Names for a JSON Web Token (JWT).
 #[derive(Debug, Serialize, Deserialize)]
@@ -59,6 +60,44 @@ impl Claims {
             perms: permissions,
         }
     }
+}
+
+// TODO remove on 10.4 of jwt
+fn family(algorithm: Algorithm) -> AlgorithmFamily {
+    match algorithm {
+        Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => AlgorithmFamily::Hmac,
+        Algorithm::RS256
+        | Algorithm::RS384
+        | Algorithm::RS512
+        | Algorithm::PS256
+        | Algorithm::PS384
+        | Algorithm::PS512 => AlgorithmFamily::Rsa,
+        Algorithm::ES256 | Algorithm::ES384 => AlgorithmFamily::Ec,
+        Algorithm::EdDSA => AlgorithmFamily::Ed,
+    }
+}
+
+pub fn build_jwk(
+    kid: &uuid::Uuid,
+    der_key: &Vec<u8>,
+    algorithm_string: &str,
+) -> Result<Jwk, DataAccessError> {
+    let algorithm =
+        Algorithm::from_str(algorithm_string).map_err(|_| DataAccessError::CryptoError)?;
+
+    let encoding_key = match family(algorithm) {
+        AlgorithmFamily::Hmac => EncodingKey::from_secret(der_key),
+        AlgorithmFamily::Rsa => EncodingKey::from_rsa_der(der_key),
+        AlgorithmFamily::Ec => EncodingKey::from_ec_der(der_key),
+        AlgorithmFamily::Ed => EncodingKey::from_ed_der(der_key),
+    };
+
+    let mut jwk = Jwk::from_encoding_key(&encoding_key, algorithm)
+        .map_err(|_| DataAccessError::CryptoError)?;
+    jwk.common.key_id = Some(kid.to_string());
+    jwk.common.key_algorithm = KeyAlgorithm::from_str(algorithm_string).ok();
+
+    Ok(jwk)
 }
 
 pub static JWT_ENCODING_ALGORITHM: Algorithm = Algorithm::EdDSA;

@@ -1,11 +1,36 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "jwks_state"))]
+    pub struct JwksState;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "jwt_algorithm"))]
+    pub struct JwtAlgorithm;
+}
+
 diesel::table! {
     authentication_tokens (token_id) {
         token_id -> Uuid,
         user_id -> Uuid,
         token_hash -> Text,
         expiry_time -> Timestamp,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::JwtAlgorithm;
+    use super::sql_types::JwksState;
+
+    jwks (kid) {
+        kid -> Uuid,
+        encrypted_private_key -> Bytea,
+        public_key -> Text,
+        algorithm -> JwtAlgorithm,
+        created_at -> Timestamp,
+        state -> JwksState,
     }
 }
 
@@ -34,6 +59,7 @@ diesel::joinable!(user_permissions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     authentication_tokens,
+    jwks,
     user_permissions,
     users,
 );
