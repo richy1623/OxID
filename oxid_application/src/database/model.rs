@@ -3,6 +3,7 @@ use oxid_service_interface::models::User as ApiUserModel;
 use crate::database::model::user::User;
 
 pub mod authentication_token;
+pub mod data_encryption_key;
 pub mod jwks;
 pub mod user;
 pub mod user_permission;

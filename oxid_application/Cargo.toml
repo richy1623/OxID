@@ -37,6 +37,9 @@ config = "0.15.22"
 iso8601 = { version = "0.6.3", features = ["serde"] }
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto", "use_pem"] }
 ed25519-dalek = { version = "2.2", features = ["pkcs8", "pem"] }
+zeroize = { version = "1.8.2", features = ["derive"] }
+blake3 = "1.8.5"
+aes-gcm = "0.10.3"
 
 [dev-dependencies]
 tokio = { version = "1.51.1", features = ["macros"] }

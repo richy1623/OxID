@@ -12,6 +12,7 @@ CREATE TYPE jwt_algorithm AS ENUM (
 CREATE TABLE jwks (
     kid UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
     encrypted_private_key BYTEA NOT NULL,
+    data_encryption_key_id UUID NOT NULL REFERENCES data_encryption_keys (kid) ON DELETE RESTRICT,
     public_key TEXT NOT NULL,
     algorithm jwt_algorithm NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
