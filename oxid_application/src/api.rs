@@ -56,6 +56,11 @@ impl From<DataAccessError> for ActixError {
                 "Crypto/Auth Error",
                 "Incorrect password or invalid token",
             ),
+            DataAccessError::InternalError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal Server Error",
+                "An error occurred in the system, please retry later",
+            ),
         };
 
         // 2. Build the JSON body using your external struct

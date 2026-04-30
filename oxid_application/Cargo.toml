@@ -42,8 +42,8 @@ zeroize = { version = "1.8.2", features = ["derive"] }
 blake3 = "1.8.5"
 aes-gcm = "0.10.3"
 arc-swap = "1.9.1"
+tokio = { version = "1.52.1", features = ["macros"] }
 
 [dev-dependencies]
-tokio = { version = "1.52.1", features = ["macros"] }
 rstest = "0.26.1"
 actix-test = "0.1.5"

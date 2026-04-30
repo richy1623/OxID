@@ -60,22 +60,21 @@ pub async fn fetch_valid_keys(
         .await
         .map_err(DataAccessError::from)?;
 
-    Ok(JwkSet {
-        keys: jwks
-            .into_iter()
-            .map(
-                |(kid, encrypted_private_key, encryption_nonce, algorithm)| {
-                    let der_encoded_private_key = key_manager.decrypt_data(
-                        &kid,
-                        &encrypted_private_key,
-                        encryption_nonce.as_array().unwrap(),
-                    )?;
-
-                    build_jwk(&kid, &der_encoded_private_key, algorithm.0)
-                },
+    let mut keys = Vec::new();
+    for (kid, encrypted_private_key, encryption_nonce, algorithm) in jwks {
+        let der_encoded_private_key = key_manager
+            .decrypt_data(
+                &kid,
+                &encrypted_private_key,
+                encryption_nonce.as_array().unwrap(),
             )
-            .collect::<Result<Vec<Jwk>, DataAccessError>>()?,
-    })
+            .await?;
+
+        let jwk = build_jwk(&kid, &der_encoded_private_key, algorithm.0)?;
+        keys.push(jwk);
+    }
+
+    Ok(JwkSet { keys })
 }
 
 // TODO handle no current JWK
@@ -100,11 +99,13 @@ pub async fn fetch_current_jwk(
         .await
         .map_err(DataAccessError::from)?;
 
-    let der_encoded_private_key = key_manager.decrypt_data(
-        &kid,
-        &encrypted_private_key,
-        encryption_nonce.as_array().unwrap(),
-    )?;
+    let der_encoded_private_key = key_manager
+        .decrypt_data(
+            &kid,
+            &encrypted_private_key,
+            encryption_nonce.as_array().unwrap(),
+        )
+        .await?;
 
     build_jwk(&kid, &der_encoded_private_key, algorithm.0)
 }
@@ -115,7 +116,8 @@ pub async fn create_new_jwk(
     encoding_key: &EncodingKey,
     encoding_key_algorithm: &Algorithm,
 ) -> Result<Jwk, DataAccessError> {
-    let (kid, encrypted_encoding_key, nonce) = key_manager.encrypt_data(encoding_key.inner())?;
+    let (kid, encrypted_encoding_key, nonce) =
+        key_manager.encrypt_data(encoding_key.inner()).await?;
 
     let kid: uuid::Uuid = diesel::insert_into(jwks::table)
         .values((
