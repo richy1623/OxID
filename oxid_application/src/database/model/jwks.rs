@@ -1,14 +1,11 @@
 use std::io::Write;
 
+use crate::crypto::data_encryption::KeyManager;
 use crate::database::schema::sql_types::JwkState as JwkStateSqlType;
 use crate::database::schema::sql_types::JwtAlgorithm as JwtAlgorithmSqlType;
 use crate::{
     crypto::jwt::build_jwk,
-    database::{DataAccessError, model::data_encryption_key::DataEncryptionKeys, schema::jwks},
-};
-use aes_gcm::{
-    AeadCore, Aes128Gcm, Key, KeyInit, Nonce,
-    aead::{AeadMut, OsRng, Payload},
+    database::{DataAccessError, schema::jwks},
 };
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::{Pg, PgValue};
@@ -47,10 +44,9 @@ impl FromSql<JwtAlgorithmSqlType, Pg> for JwtAlgorithm {
     }
 }
 
-// fetch published keys
 pub async fn fetch_valid_keys(
     connection: &mut AsyncPgConnection,
-    data_encryption_keys: &DataEncryptionKeys,
+    key_manager: &KeyManager,
 ) -> Result<JwkSet, DataAccessError> {
     let jwks: Vec<(uuid::Uuid, Vec<u8>, Vec<u8>, JwtAlgorithm)> = jwks::table
         .filter(jwks::state.eq_any(vec![JwkState::Published, JwkState::Active]))
@@ -69,49 +65,23 @@ pub async fn fetch_valid_keys(
             .into_iter()
             .map(
                 |(kid, encrypted_private_key, encryption_nonce, algorithm)| {
-                    build_jwk_from_db_jwks_entry(
+                    let der_encoded_private_key = key_manager.decrypt_data(
                         &kid,
                         &encrypted_private_key,
-                        &encryption_nonce,
-                        algorithm.0,
-                        data_encryption_keys,
-                    )
+                        encryption_nonce.as_array().unwrap(),
+                    )?;
+
+                    build_jwk(&kid, &der_encoded_private_key, algorithm.0)
                 },
             )
             .collect::<Result<Vec<Jwk>, DataAccessError>>()?,
     })
 }
 
-fn build_jwk_from_db_jwks_entry(
-    kid: &uuid::Uuid,
-    encrypted_private_key: &Vec<u8>,
-    encryption_nonce: &Vec<u8>,
-    algorithm: Algorithm,
-    data_encryption_keys: &DataEncryptionKeys,
-) -> Result<Jwk, DataAccessError> {
-    let mut cipher = match data_encryption_keys.get_decryption_key(kid) {
-        #[allow(deprecated)]
-        Some(key) => Ok(Aes128Gcm::new(Key::<Aes128Gcm>::from_slice(key))),
-        None => Err(DataAccessError::CryptoError),
-    }?;
-    let decrypted_private_key = cipher
-        .decrypt(
-            #[allow(deprecated)]
-            Nonce::from_slice(encryption_nonce),
-            Payload {
-                msg: encrypted_private_key,
-                aad: blake3::hash(&encrypted_private_key).as_bytes(),
-            },
-        )
-        .map_err(|_| DataAccessError::CryptoError)?;
-
-    build_jwk(kid, &decrypted_private_key, algorithm)
-}
-
 // TODO handle no current JWK
 pub async fn fetch_current_jwk(
     connection: &mut AsyncPgConnection,
-    data_encryption_keys: &DataEncryptionKeys,
+    key_manager: &KeyManager,
 ) -> Result<Jwk, DataAccessError> {
     let (kid, encrypted_private_key, encryption_nonce, algorithm): (
         uuid::Uuid,
@@ -130,45 +100,28 @@ pub async fn fetch_current_jwk(
         .await
         .map_err(DataAccessError::from)?;
 
-    build_jwk_from_db_jwks_entry(
+    let der_encoded_private_key = key_manager.decrypt_data(
         &kid,
         &encrypted_private_key,
-        &encryption_nonce,
-        algorithm.0,
-        data_encryption_keys,
-    )
+        encryption_nonce.as_array().unwrap(),
+    )?;
+
+    build_jwk(&kid, &der_encoded_private_key, algorithm.0)
 }
 
 pub async fn create_new_jwk(
     connection: &mut AsyncPgConnection,
-    data_encryption_keys: &DataEncryptionKeys,
+    key_manager: &KeyManager,
     encoding_key: &EncodingKey,
     encoding_key_algorithm: &Algorithm,
 ) -> Result<Jwk, DataAccessError> {
-    // TODO migrate the data_encryption code
-    let dek = data_encryption_keys
-        .get_active_key()
-        .ok_or(DataAccessError::CryptoError)?;
-    #[allow(deprecated)]
-    let mut cipher = Aes128Gcm::new(Key::<Aes128Gcm>::from_slice(&dek.key));
-
-    let nonce = Aes128Gcm::generate_nonce(&mut OsRng);
-    let encrypted_private_key = cipher
-        .encrypt(
-            #[allow(deprecated)]
-            Nonce::from_slice(&nonce),
-            Payload {
-                msg: encoding_key.inner(),
-                aad: blake3::hash(&encoding_key.inner()).as_bytes(),
-            },
-        )
-        .map_err(|_| DataAccessError::CryptoError)?;
+    let (kid, encrypted_encoding_key, nonce) = key_manager.encrypt_data(encoding_key.inner())?;
 
     let kid: uuid::Uuid = diesel::insert_into(jwks::table)
         .values((
-            jwks::encrypted_der_encoded_private_key.eq(encrypted_private_key),
+            jwks::encrypted_der_encoded_private_key.eq(encrypted_encoding_key),
             jwks::encryption_nonce.eq(nonce.to_vec()),
-            jwks::data_encryption_key_id.eq(dek.kid),
+            jwks::data_encryption_key_id.eq(kid),
             jwks::algorithm.eq(JwtAlgorithm(*encoding_key_algorithm)),
         ))
         .returning(jwks::kid)

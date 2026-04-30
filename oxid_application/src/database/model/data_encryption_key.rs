@@ -31,6 +31,10 @@ impl Drop for DataEncryptionKeys {
 }
 
 impl DataEncryptionKeys {
+    pub fn len(&self) -> usize {
+        self.keys.len()
+    }
+
     pub fn get_decryption_key(&self, kid: &uuid::Uuid) -> Option<&Vec<u8>> {
         self.keys.get(kid).map(|dek| &dek.key)
     }
