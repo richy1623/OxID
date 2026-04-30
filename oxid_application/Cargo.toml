@@ -6,23 +6,23 @@ authors.workspace = true
 description.workspace = true
 
 [dependencies]
-diesel = { version = "2.3.7", features = ["uuid", "chrono"] }
+diesel = { version = "2.3.8", features = ["uuid", "chrono"] }
 diesel-async = { version = "0.8.0", features = [
     "postgres",
     "deadpool",
     "migrations",
 ] }
 diesel-derive-enum = { version = "3.0.0-beta.1", features = ["postgres"] }
-diesel_migrations = { version = "2.3.1", features = ["postgres"] }
+diesel_migrations = { version = "2.3.2", features = ["postgres"] }
 oxid_service_interface.workspace = true
 lettre = { version = "0.11" }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
-openssl-sys = { version = "0.9.112", features = ["vendored"] }
+openssl-sys = { version = "0.9.114", features = ["vendored"] }
 serde = { version = "1.0.228" }
-uuid = { version = "1.23.0", features = ["serde", "v7"] }
+uuid = { version = "1.23.1", features = ["serde", "v7"] }
 # TODO Update when v0.6.0 of argon2 comes out
 argon2 = { version = "0.6.0-rc.8" }
-rand_core = { version = "0.10.0" }
+rand_core = { version = "0.10.1" }
 password-hash = { version = "0.6.1", features = ["rand_core"] }
 thiserror = "2.0.18"
 chrono = { version = "0.4.44", features = ["serde"] }
@@ -31,7 +31,7 @@ getrandom = "0.4.2"
 derive-debug = "0.1.2"
 actix-web = { version = "4.13.0", features = ["rustls-0_23"] }
 tracing = "0.1.44"
-rustls = "0.23.37"
+rustls = "0.23.40"
 serde_json = "1.0.149"
 config = "0.15.22"
 iso8601 = { version = "0.6.3", features = ["serde"] }
@@ -42,6 +42,6 @@ blake3 = "1.8.5"
 aes-gcm = "0.10.3"
 
 [dev-dependencies]
-tokio = { version = "1.51.1", features = ["macros"] }
+tokio = { version = "1.52.1", features = ["macros"] }
 rstest = "0.26.1"
 actix-test = "0.1.5"
