@@ -31,6 +31,17 @@ impl Drop for DataEncryptionKeys {
 }
 
 impl DataEncryptionKeys {
+    pub fn get_decryption_key(&self, kid: &uuid::Uuid) -> Option<&Vec<u8>> {
+        self.keys.get(kid).map(|dek| &dek.key)
+    }
+
+    pub fn get_active_key(&self) -> Option<&DataEncryptionKey> {
+        self.keys
+            .iter()
+            .find(|(_kid, dek)| dek.is_active)
+            .map(|(_kid, dek)| dek)
+    }
+
     pub async fn fetch_data_encryption_keys(
         connection: &mut AsyncPgConnection,
         key_encryption_key: &KeyEncryptionKey,

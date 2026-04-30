@@ -1,4 +1,4 @@
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
 use chrono::Utc;
 use jsonwebtoken::{
@@ -80,11 +80,8 @@ fn family(algorithm: Algorithm) -> AlgorithmFamily {
 pub fn build_jwk(
     kid: &uuid::Uuid,
     der_key: &Vec<u8>,
-    algorithm_string: &str,
+    algorithm: Algorithm,
 ) -> Result<Jwk, DataAccessError> {
-    let algorithm =
-        Algorithm::from_str(algorithm_string).map_err(|_| DataAccessError::CryptoError)?;
-
     let encoding_key = match family(algorithm) {
         AlgorithmFamily::Hmac => EncodingKey::from_secret(der_key),
         AlgorithmFamily::Rsa => EncodingKey::from_rsa_der(der_key),
@@ -95,7 +92,10 @@ pub fn build_jwk(
     let mut jwk = Jwk::from_encoding_key(&encoding_key, algorithm)
         .map_err(|_| DataAccessError::CryptoError)?;
     jwk.common.key_id = Some(kid.to_string());
-    jwk.common.key_algorithm = KeyAlgorithm::from_str(algorithm_string).ok();
+    jwk.common.key_algorithm = serde_json::to_string(&algorithm)
+        .ok()
+        .map(|algorithm_string| serde_json::from_str::<KeyAlgorithm>(&algorithm_string).ok())
+        .flatten();
 
     Ok(jwk)
 }

@@ -2,8 +2,8 @@
 
 pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "jwks_state"))]
-    pub struct JwksState;
+    #[diesel(postgres_type(name = "jwk_state"))]
+    pub struct JwkState;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "jwt_algorithm"))]
@@ -32,16 +32,16 @@ diesel::table! {
 diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::JwtAlgorithm;
-    use super::sql_types::JwksState;
+    use super::sql_types::JwkState;
 
     jwks (kid) {
         kid -> Uuid,
-        encrypted_private_key -> Bytea,
+        encrypted_der_encoded_private_key -> Bytea,
+        encryption_nonce -> Bytea,
         data_encryption_key_id -> Uuid,
-        public_key -> Text,
         algorithm -> JwtAlgorithm,
         created_at -> Timestamp,
-        state -> JwksState,
+        state -> JwkState,
     }
 }
 

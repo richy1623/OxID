@@ -3,4 +3,4 @@ DROP TABLE jwks;
 
 DROP TYPE jwt_algorithm;
 
-DROP TYPE jwks_state;
+DROP TYPE jwk_state;
