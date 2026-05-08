@@ -71,8 +71,7 @@ pub async fn login(
             refresh_token: Box::new(AuthenticationToken {
                 token_id: refresh_token.token_id,
                 token_secret: refresh_token.token,
-                // TODO change to DateTime
-                token_expiry_time: refresh_token.expiry_time.to_string(),
+                token_expiry_time: refresh_token.expiry_time.fixed_offset(),
             }),
         }))
 }

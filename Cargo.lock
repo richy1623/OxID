@@ -2460,6 +2460,7 @@ dependencies = [
 name = "oxid_service_interface"
 version = "0.0.1"
 dependencies = [
+ "chrono",
  "reqwest",
  "serde",
  "serde_json",

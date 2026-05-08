@@ -24,8 +24,8 @@ pub struct AuthenticationToken {
     /// The secret token
     #[dbg(placeholder = "****")]
     pub token: String,
-    /// User's given name
-    pub expiry_time: chrono::NaiveDateTime,
+    /// The time until which the token is valid
+    pub expiry_time: chrono::DateTime<Utc>,
 }
 
 impl AuthenticationToken {
@@ -41,7 +41,7 @@ impl AuthenticationToken {
             .values((
                 authentication_tokens::user_id.eq(user_id),
                 authentication_tokens::token_hash.eq(hash_string(&key_hex_string)?),
-                authentication_tokens::expiry_time.eq((Utc::now() + token_life).naive_utc()),
+                authentication_tokens::expiry_time.eq(Utc::now() + token_life),
             ))
             .returning((
                 authentication_tokens::user_id,
@@ -153,15 +153,11 @@ mod tests {
         .unwrap();
 
         assert_eq!(authentication_token.user_id, user.id);
+        assert!(authentication_token.expiry_time.ge(&Utc::now()));
         assert!(
             authentication_token
                 .expiry_time
-                .ge(&Utc::now().naive_local())
-        );
-        assert!(
-            authentication_token
-                .expiry_time
-                .le(&(Utc::now() + Duration::from_secs(5)).naive_local())
+                .le(&(Utc::now() + Duration::from_secs(5)))
         );
 
         AuthenticationToken::validate_authentication_token(

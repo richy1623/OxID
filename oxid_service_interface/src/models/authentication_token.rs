@@ -22,12 +22,12 @@ pub struct AuthenticationToken {
     pub token_secret: String,
     /// The time until which the token is valid
     #[serde(rename = "tokenExpiryTime")]
-    pub token_expiry_time: String,
+    pub token_expiry_time: chrono::DateTime<chrono::FixedOffset>,
 }
 
 impl AuthenticationToken {
     /// A token used to prove identity
-    pub fn new(token_id: uuid::Uuid, token_secret: String, token_expiry_time: String) -> AuthenticationToken {
+    pub fn new(token_id: uuid::Uuid, token_secret: String, token_expiry_time: chrono::DateTime<chrono::FixedOffset>) -> AuthenticationToken {
         AuthenticationToken {
             token_id,
             token_secret,

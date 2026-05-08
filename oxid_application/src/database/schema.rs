@@ -15,7 +15,7 @@ diesel::table! {
         token_id -> Uuid,
         user_id -> Uuid,
         token_hash -> Text,
-        expiry_time -> Timestamp,
+        expiry_time -> Timestamptz,
     }
 }
 
