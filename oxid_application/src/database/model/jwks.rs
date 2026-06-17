@@ -11,7 +11,6 @@ use diesel::deserialize::{self, FromSql};
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::{ExpressionMethods, QueryDsl, deserialize::FromSqlRow, expression::AsExpression};
-use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use diesel_derive_enum::DbEnum;
 use jsonwebtoken::{
@@ -143,23 +142,20 @@ pub async fn activate_jwk(
     kid: &uuid::Uuid,
 ) -> Result<usize, DataAccessError> {
     connection
-        .transaction(|connection| {
-            async move {
-                // Update all other jwks to inactive
-                diesel::update(jwks::table.filter(jwks::state.eq(JwkState::Active)))
-                    .set(jwks::state.eq(JwkState::Published))
-                    .execute(connection)
-                    .await
-                    .map_err(DataAccessError::from)?;
+        .transaction(async |connection| {
+            // Update all other jwks to inactive
+            diesel::update(jwks::table.filter(jwks::state.eq(JwkState::Active)))
+                .set(jwks::state.eq(JwkState::Published))
+                .execute(connection)
+                .await
+                .map_err(DataAccessError::from)?;
 
-                // Add the new key as active
-                diesel::update(jwks::table.filter(jwks::kid.eq(kid)))
-                    .set(jwks::state.eq(JwkState::Active))
-                    .execute(connection)
-                    .await
-                    .map_err(DataAccessError::from)
-            }
-            .scope_boxed()
+            // Add the new key as active
+            diesel::update(jwks::table.filter(jwks::kid.eq(kid)))
+                .set(jwks::state.eq(JwkState::Active))
+                .execute(connection)
+                .await
+                .map_err(DataAccessError::from)
         })
         .await
 }

@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use derive_debug::Dbg;
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::{
-    AsyncConnection, AsyncPgConnection, RunQueryDsl, scoped_futures::ScopedFutureExt,
-};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use zeroize::Zeroize;
 
 use crate::{
@@ -91,34 +89,30 @@ impl DataEncryptionKeys {
         let (encrypted_key, nonce) =
             data_encryption_key.encrypt_data_encryption_key(&key_encryption_key)?;
         connection
-            .transaction(|connection| {
-                async move {
-                    // Update all other keys to inactive
-                    diesel::update(
-                        data_encryption_keys::table
-                            .filter(data_encryption_keys::is_active.eq(true)),
-                    )
-                    .set(data_encryption_keys::is_active.eq(false))
+            .transaction(async |connection| {
+                // Update all other keys to inactive
+                diesel::update(
+                    data_encryption_keys::table.filter(data_encryption_keys::is_active.eq(true)),
+                )
+                .set(data_encryption_keys::is_active.eq(false))
+                .execute(connection)
+                .await
+                .map_err(DataAccessError::from)?;
+
+                // Add the new key as active
+                diesel::insert_into(data_encryption_keys::table)
+                    .values((
+                        data_encryption_keys::kid.eq(&data_encryption_key.kid),
+                        data_encryption_keys::encrypted_data_encryption_key.eq(encrypted_key),
+                        data_encryption_keys::encryption_nonce.eq(nonce),
+                        data_encryption_keys::is_active.eq(true),
+                    ))
                     .execute(connection)
                     .await
                     .map_err(DataAccessError::from)?;
 
-                    // Add the new key as active
-                    diesel::insert_into(data_encryption_keys::table)
-                        .values((
-                            data_encryption_keys::kid.eq(&data_encryption_key.kid),
-                            data_encryption_keys::encrypted_data_encryption_key.eq(encrypted_key),
-                            data_encryption_keys::encryption_nonce.eq(nonce),
-                            data_encryption_keys::is_active.eq(true),
-                        ))
-                        .execute(connection)
-                        .await
-                        .map_err(DataAccessError::from)?;
-
-                    // Return Ok
-                    Ok::<(), DataAccessError>(())
-                }
-                .scope_boxed()
+                // Return Ok
+                Ok::<(), DataAccessError>(())
             })
             .await?;
 

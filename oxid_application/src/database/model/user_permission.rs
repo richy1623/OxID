@@ -1,7 +1,5 @@
 use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::{
-    AsyncConnection, AsyncPgConnection, RunQueryDsl, scoped_futures::ScopedFutureExt,
-};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
 use crate::database::{DataAccessError, schema::user_permissions};
@@ -170,13 +168,10 @@ impl UserPermissions {
         permissions: &Vec<&str>,
     ) -> Result<(), DataAccessError> {
         connection
-            .transaction(|connection| {
-                async move {
-                    UserPermissions::remove_all_permissions(connection, user_id).await?;
-                    UserPermissions::add_permissions(connection, user_id, permissions).await?;
-                    Ok(())
-                }
-                .scope_boxed()
+            .transaction(async |connection| {
+                UserPermissions::remove_all_permissions(connection, user_id).await?;
+                UserPermissions::add_permissions(connection, user_id, permissions).await?;
+                Ok(())
             })
             .await
     }
