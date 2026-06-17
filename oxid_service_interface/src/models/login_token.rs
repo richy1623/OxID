@@ -19,15 +19,15 @@ pub struct LoginToken {
     pub access_token: String,
     /// Long-lived token used to refresh authentication
     #[serde(rename = "refreshToken")]
-    pub refresh_token: String,
+    pub refresh_token: Box<models::AuthenticationToken>,
 }
 
 impl LoginToken {
     /// JWT access and refresh token pair
-    pub fn new(access_token: String, refresh_token: String) -> LoginToken {
+    pub fn new(access_token: String, refresh_token: models::AuthenticationToken) -> LoginToken {
         LoginToken {
             access_token,
-            refresh_token,
+            refresh_token: Box::new(refresh_token),
         }
     }
 }

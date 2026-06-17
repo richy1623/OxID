@@ -38,6 +38,8 @@ pub enum DataAccessError {
     DatabaseError(#[from] diesel::result::Error),
     #[error("An error occurred while performing a crypto operation")]
     CryptoError,
+    #[error("An error occurred")]
+    InternalError,
 }
 
 impl From<password_hash::Error> for DataAccessError {

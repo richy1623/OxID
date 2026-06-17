@@ -103,7 +103,7 @@ No authorization required
 
 ## user_refresh_login
 
-> models::LoginToken user_refresh_login(user_refresh_login_request)
+> models::LoginToken user_refresh_login(authentication_token)
 Refresh login tokens
 
 Issues a new access token and refresh token using a valid refresh token. 
@@ -113,7 +113,7 @@ Issues a new access token and refresh token using a valid refresh token.
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**user_refresh_login_request** | [**UserRefreshLoginRequest**](UserRefreshLoginRequest.md) | Refresh token payload | [required] |
+**authentication_token** | [**AuthenticationToken**](AuthenticationToken.md) | Refresh token payload | [required] |
 
 ### Return type
 

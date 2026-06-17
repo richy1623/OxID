@@ -73,7 +73,7 @@ Diesel is the ORM used to interact DB
   ```
 
 - Create New Migration
-
+  > Note: this requires being in the correct directory
   ```bash
   diesel migration generate <migration_name>
   ```

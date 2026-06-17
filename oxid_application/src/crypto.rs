@@ -1,3 +1,6 @@
+pub mod data_encryption;
+pub mod jwt;
+
 use argon2::{Argon2, Params, PasswordHasher};
 use std::sync::LazyLock;
 

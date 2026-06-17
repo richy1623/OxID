@@ -1,8 +1,17 @@
 use actix_web::{HttpResponse, Responder, Result, http::StatusCode, post, web};
 use diesel_async::{AsyncPgConnection, pooled_connection::deadpool::Pool};
-use oxid_service_interface::models::{CreateUserRequest, User};
+use oxid_service_interface::models::{
+    AuthenticationToken, CreateUserRequest, LoginToken, User, UserLoginRequest,
+};
 
-use crate::{api::handler::get_database_connection, database::model::user::User as UserDbModel};
+use crate::{
+    api::handler::get_database_connection,
+    configuration::AppConfig,
+    database::model::{
+        authentication_token::AuthenticationToken as AuthenticationTokenDbModel,
+        user::User as UserDbModel,
+    },
+};
 
 #[post("/user")]
 pub async fn create_user(
@@ -31,6 +40,42 @@ pub async fn create_user(
         .json(User::from(user)))
 }
 
+#[post("/auth/login")]
+pub async fn login(
+    config: web::Data<AppConfig>,
+    connection_pool: web::Data<Pool<AsyncPgConnection>>,
+    request: web::Json<UserLoginRequest>,
+) -> Result<impl Responder> {
+    let login_request: UserLoginRequest = request.into_inner();
+
+    let mut connection = get_database_connection(connection_pool).await?;
+
+    let user = UserDbModel::validate_login(
+        &mut connection,
+        &login_request.email_address,
+        &login_request.password,
+    )
+    .await?;
+
+    let refresh_token = AuthenticationTokenDbModel::create_authentication_token(
+        &mut connection,
+        user.id,
+        config.authentication_token_lifespan,
+    )
+    .await?;
+
+    Ok(HttpResponse::Ok()
+        .status(StatusCode::CREATED)
+        .json(LoginToken {
+            access_token: "todo!()".to_string(),
+            refresh_token: Box::new(AuthenticationToken {
+                token_id: refresh_token.token_id,
+                token_secret: refresh_token.token,
+                token_expiry_time: refresh_token.expiry_time.fixed_offset(),
+            }),
+        }))
+}
+
 #[cfg(test)]
 mod tests {
     use actix_test::TestServer;
@@ -48,8 +93,11 @@ mod tests {
     #[fixture]
     pub fn server(db_pool: &Pool<AsyncPgConnection>) -> TestServer {
         let pool = db_pool.clone();
+        let config = crate::configuration::tests::get_test_config();
+
         actix_test::start(move || {
-            App::new().configure(|c| crate::api::server::configure_app(c, pool.clone()))
+            App::new()
+                .configure(|c| crate::api::server::configure_app(c, config.clone(), pool.clone()))
         })
     }
 

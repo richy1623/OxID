@@ -1,3 +1,5 @@
+pub mod authentication_token;
+pub use self::authentication_token::AuthenticationToken;
 pub mod create_user_request;
 pub use self::create_user_request::CreateUserRequest;
 pub mod error_detail;
@@ -8,5 +10,3 @@ pub mod user;
 pub use self::user::User;
 pub mod user_login_request;
 pub use self::user_login_request::UserLoginRequest;
-pub mod user_refresh_login_request;
-pub use self::user_refresh_login_request::UserRefreshLoginRequest;
