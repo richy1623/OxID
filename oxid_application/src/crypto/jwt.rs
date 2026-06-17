@@ -62,27 +62,12 @@ impl Claims {
     }
 }
 
-// TODO remove on 10.4 of jwt
-fn family(algorithm: Algorithm) -> AlgorithmFamily {
-    match algorithm {
-        Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => AlgorithmFamily::Hmac,
-        Algorithm::RS256
-        | Algorithm::RS384
-        | Algorithm::RS512
-        | Algorithm::PS256
-        | Algorithm::PS384
-        | Algorithm::PS512 => AlgorithmFamily::Rsa,
-        Algorithm::ES256 | Algorithm::ES384 => AlgorithmFamily::Ec,
-        Algorithm::EdDSA => AlgorithmFamily::Ed,
-    }
-}
-
 pub fn build_jwk(
     kid: &uuid::Uuid,
     der_key: &Vec<u8>,
     algorithm: Algorithm,
 ) -> Result<Jwk, DataAccessError> {
-    let encoding_key = match family(algorithm) {
+    let encoding_key = match algorithm.family() {
         AlgorithmFamily::Hmac => EncodingKey::from_secret(der_key),
         AlgorithmFamily::Rsa => EncodingKey::from_rsa_der(der_key),
         AlgorithmFamily::Ec => EncodingKey::from_ec_der(der_key),
